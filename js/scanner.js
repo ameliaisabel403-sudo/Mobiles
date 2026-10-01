@@ -1,11 +1,43 @@
 /* ==========================================================================
-   COMPANY PHONE TRACKER - UPGRADED CAMERA QR SCANNER MODULE
+   COMPANY PHONE TRACKER - SMART QR CODE PARSER & SCANNER MODULE
    ========================================================================== */
 
 let html5QrCodeScanner = null;
 let currentScanCallback = null;
 
-// Audio Beep Feedback using Web Audio API (No external sound files required)
+// Smart QR Payload Parser: Normalizes any scanned string into 'PHONE-XXX' format
+export function parsePhoneIdFromQR(scannedText) {
+  if (!scannedText) return '';
+  let str = String(scannedText).trim();
+
+  // 1. Extract last segment if text is a URL (e.g. https://site.com/PHONE-005)
+  if (str.includes('/')) {
+    const parts = str.split('/').filter(p => p.length > 0);
+    str = parts[parts.length - 1] || str;
+  }
+
+  // 2. Match pattern 'PHONE-1', 'phone-001', 'PHONE001'
+  const match = str.match(/PHONE-?(\d+)/i);
+  if (match && match[1]) {
+    const num = parseInt(match[1], 10);
+    if (num >= 1 && num <= 20) {
+      return `PHONE-${String(num).padStart(3, '0')}`;
+    }
+  }
+
+  // 3. Match pure numbers e.g. '1', '01', '001'
+  if (/^\d+$/.test(str)) {
+    const num = parseInt(str, 10);
+    if (num >= 1 && num <= 20) {
+      return `PHONE-${String(num).padStart(3, '0')}`;
+    }
+  }
+
+  // 4. Default fallback: Clean uppercase string
+  return str.toUpperCase();
+}
+
+// Audio Beep Feedback using Web Audio API
 function playBeepSound() {
   try {
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -13,7 +45,7 @@ function playBeepSound() {
     const gain = audioCtx.createGain();
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, audioCtx.currentTime); // 880Hz crisp beep
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
     gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
 
@@ -22,9 +54,7 @@ function playBeepSound() {
 
     osc.start();
     osc.stop(audioCtx.currentTime + 0.15);
-  } catch (e) {
-    console.log('Audio beep note:', e);
-  }
+  } catch (e) {}
 }
 
 // Open Camera Scanner Modal
@@ -44,7 +74,7 @@ export function closeScannerModal() {
   currentScanCallback = null;
 }
 
-// Initialize Html5Qrcode Camera Engine with High-Performance Settings
+// Initialize Camera Stream
 async function initCameraStream() {
   const qrRegion = document.getElementById('qr-reader');
   if (!qrRegion) return;
@@ -69,25 +99,21 @@ async function initCameraStream() {
         }
       };
 
-      // Prefer rear back camera on mobile phones ('environment')
       await html5QrCodeScanner.start(
         { facingMode: "environment" },
         config,
         (decodedText) => {
           handleScanResult(decodedText);
         },
-        (errorMessage) => {
-          // Frame scan pass
-        }
+        (errorMessage) => {}
       );
 
       showCameraStatus('🟢 Camera Active. Point at Phone QR Tag.');
     } else {
-      showCameraStatus('⚠️ Camera engine loading... Please retry in a second.');
+      showCameraStatus('⚠️ Loading camera scanner...');
     }
   } catch (err) {
-    console.warn('Camera stream note:', err);
-    showCameraStatus('💡 Camera permissions needed, or use quick select below.');
+    showCameraStatus('💡 Camera permission needed, or select Phone ID below.');
   }
 }
 
@@ -97,37 +123,31 @@ export async function stopCameraStream() {
     try {
       await html5QrCodeScanner.stop();
       html5QrCodeScanner.clear();
-    } catch (e) {
-      // Ignore cleanup error if stream stopped
-    }
+    } catch (e) {}
     html5QrCodeScanner = null;
   }
 }
 
 // Handle Successful QR Scan
-function handleScanResult(scannedValue) {
-  if (!scannedValue) return;
-  const cleanVal = scannedValue.trim().toUpperCase();
+function handleScanResult(scannedRawValue) {
+  if (!scannedRawValue) return;
 
-  // 1. Play Crisp Audio Beep
+  // Smart sanitize payload into valid 'PHONE-XXX'
+  const cleanPhoneId = parsePhoneIdFromQR(scannedRawValue);
+
   playBeepSound();
 
-  // 2. Trigger Haptic Vibration on Mobile Devices
   if (navigator.vibrate) {
-    try {
-      navigator.vibrate([100, 50, 100]);
-    } catch (e) {}
+    try { navigator.vibrate([100, 50, 100]); } catch (e) {}
   }
 
-  // 3. Close scanner & trigger callback
   closeScannerModal();
 
   if (currentScanCallback) {
-    currentScanCallback(cleanVal);
+    currentScanCallback(cleanPhoneId);
   }
 }
 
-// Update Camera Status Text
 function showCameraStatus(msg) {
   const statusEl = document.getElementById('camera-status-msg');
   if (statusEl) statusEl.textContent = msg;

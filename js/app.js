@@ -5,7 +5,7 @@
 import { initSupabaseClient, appConfig, saveSupabaseConfig } from './config.js';
 import { initAuth, loginStaff, logoutStaff, getCurrentStaff, isAuthenticated } from './auth.js';
 import { fetchAllPhones, fetchTransactions, fetchEmployeeByNumber, fetchAllEmployees, issuePhone, returnPhone } from './database.js';
-import { openScannerModal, closeScannerModal } from './scanner.js';
+import { openScannerModal, closeScannerModal, parsePhoneIdFromQR } from './scanner.js';
 import { renderQRMatrix } from './qr-generator.js';
 import { filterTransactions, exportToCSV } from './reports.js';
 
@@ -287,13 +287,14 @@ function setupFormsAndModals() {
   if (issueScanBtn) {
     issueScanBtn.addEventListener('click', () => {
       openScannerModal((scannedPhoneId) => {
+        const cleanId = parsePhoneIdFromQR(scannedPhoneId);
         const input = document.getElementById('issue-phone-id');
         if (input) {
-          input.value = scannedPhoneId;
+          input.value = cleanId;
           input.dispatchEvent(new Event('change', { bubbles: true }));
           input.dispatchEvent(new Event('input', { bubbles: true }));
         }
-        showToast(`Scanned Phone: ${scannedPhoneId}`, 'success');
+        showToast(`Scanned Phone: ${cleanId}`, 'success');
       });
     });
   }
@@ -303,7 +304,8 @@ function setupFormsAndModals() {
   if (issueForm) {
     issueForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const phoneId = document.getElementById('issue-phone-id').value.trim().toUpperCase();
+      const rawPhoneId = document.getElementById('issue-phone-id').value;
+      const phoneId = parsePhoneIdFromQR(rawPhoneId);
       const empNum = document.getElementById('issue-emp-number').value.trim().toUpperCase();
       const empName = document.getElementById('issue-emp-name').value.trim();
 
@@ -332,14 +334,15 @@ function setupFormsAndModals() {
   if (returnScanBtn) {
     returnScanBtn.addEventListener('click', () => {
       openScannerModal((scannedPhoneId) => {
+        const cleanId = parsePhoneIdFromQR(scannedPhoneId);
         const input = document.getElementById('return-phone-id');
         if (input) {
-          input.value = scannedPhoneId;
+          input.value = cleanId;
           input.dispatchEvent(new Event('change', { bubbles: true }));
           input.dispatchEvent(new Event('input', { bubbles: true }));
         }
-        handleReturnLookup(scannedPhoneId);
-        showToast(`Scanned Phone: ${scannedPhoneId}`, 'success');
+        handleReturnLookup(cleanId);
+        showToast(`Scanned Phone: ${cleanId}`, 'success');
       });
     });
   }
@@ -348,7 +351,8 @@ function setupFormsAndModals() {
   const returnPhoneInput = document.getElementById('return-phone-id');
   if (returnPhoneInput) {
     returnPhoneInput.addEventListener('change', (e) => {
-      handleReturnLookup(e.target.value.trim().toUpperCase());
+      const cleanId = parsePhoneIdFromQR(e.target.value);
+      handleReturnLookup(cleanId);
     });
   }
 
@@ -357,7 +361,8 @@ function setupFormsAndModals() {
   if (returnForm) {
     returnForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const phoneId = document.getElementById('return-phone-id').value.trim().toUpperCase();
+      const rawPhoneId = document.getElementById('return-phone-id').value;
+      const phoneId = parsePhoneIdFromQR(rawPhoneId);
       const condition = document.getElementById('return-condition').value;
       const notes = document.getElementById('return-notes').value;
 
@@ -395,21 +400,22 @@ function setupFormsAndModals() {
     quickSelect.addEventListener('change', (e) => {
       const val = e.target.value;
       if (val) {
+        const cleanId = parsePhoneIdFromQR(val);
         closeScannerModal();
         const activeView = document.querySelector('.view-section.active').id;
         if (activeView === 'view-issue') {
           const input = document.getElementById('issue-phone-id');
           if (input) {
-            input.value = val;
+            input.value = cleanId;
             input.dispatchEvent(new Event('change', { bubbles: true }));
           }
         } else if (activeView === 'view-return') {
           const input = document.getElementById('return-phone-id');
           if (input) {
-            input.value = val;
+            input.value = cleanId;
             input.dispatchEvent(new Event('change', { bubbles: true }));
           }
-          handleReturnLookup(val);
+          handleReturnLookup(cleanId);
         }
         quickSelect.value = '';
       }
