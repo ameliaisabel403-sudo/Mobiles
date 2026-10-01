@@ -1,9 +1,31 @@
 /* ==========================================================================
-   COMPANY PHONE TRACKER - CAMERA QR SCANNER MODULE
+   COMPANY PHONE TRACKER - UPGRADED CAMERA QR SCANNER MODULE
    ========================================================================== */
 
 let html5QrCodeScanner = null;
 let currentScanCallback = null;
+
+// Audio Beep Feedback using Web Audio API (No external sound files required)
+function playBeepSound() {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime); // 880Hz crisp beep
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.15);
+  } catch (e) {
+    console.log('Audio beep note:', e);
+  }
+}
 
 // Open Camera Scanner Modal
 export function openScannerModal(onScanSuccess) {
@@ -22,7 +44,7 @@ export function closeScannerModal() {
   currentScanCallback = null;
 }
 
-// Initialize Html5Qrcode Camera Engine
+// Initialize Html5Qrcode Camera Engine with High-Performance Settings
 async function initCameraStream() {
   const qrRegion = document.getElementById('qr-reader');
   if (!qrRegion) return;
@@ -36,11 +58,18 @@ async function initCameraStream() {
       html5QrCodeScanner = new window.Html5Qrcode("qr-reader");
 
       const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0
+        fps: 15,
+        qrbox: (viewfinderWidth, viewfinderHeight) => {
+          const minDim = Math.min(viewfinderWidth, viewfinderHeight);
+          return { width: Math.floor(minDim * 0.75), height: Math.floor(minDim * 0.75) };
+        },
+        aspectRatio: 1.0,
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: true
+        }
       };
 
+      // Prefer rear back camera on mobile phones ('environment')
       await html5QrCodeScanner.start(
         { facingMode: "environment" },
         config,
@@ -48,15 +77,17 @@ async function initCameraStream() {
           handleScanResult(decodedText);
         },
         (errorMessage) => {
-          // Frame scan error (ignore normal scanning frames)
+          // Frame scan pass
         }
       );
+
+      showCameraStatus('🟢 Camera Active. Point at Phone QR Tag.');
     } else {
-      console.warn('html5-qrcode library not loaded yet.');
+      showCameraStatus('⚠️ Camera engine loading... Please retry in a second.');
     }
   } catch (err) {
-    console.warn('Camera stream error (may be desktop without camera):', err);
-    showCameraWarning('Camera access unavailable. Use quick select below.');
+    console.warn('Camera stream note:', err);
+    showCameraStatus('💡 Camera permissions needed, or use quick select below.');
   }
 }
 
@@ -67,7 +98,7 @@ export async function stopCameraStream() {
       await html5QrCodeScanner.stop();
       html5QrCodeScanner.clear();
     } catch (e) {
-      // Ignore stop errors if already stopped
+      // Ignore cleanup error if stream stopped
     }
     html5QrCodeScanner = null;
   }
@@ -78,11 +109,17 @@ function handleScanResult(scannedValue) {
   if (!scannedValue) return;
   const cleanVal = scannedValue.trim().toUpperCase();
 
-  // Trigger Haptic Feedback on supported phones
+  // 1. Play Crisp Audio Beep
+  playBeepSound();
+
+  // 2. Trigger Haptic Vibration on Mobile Devices
   if (navigator.vibrate) {
-    navigator.vibrate(100);
+    try {
+      navigator.vibrate([100, 50, 100]);
+    } catch (e) {}
   }
 
+  // 3. Close scanner & trigger callback
   closeScannerModal();
 
   if (currentScanCallback) {
@@ -90,8 +127,8 @@ function handleScanResult(scannedValue) {
   }
 }
 
-// Show Camera Warning message
-function showCameraWarning(msg) {
+// Update Camera Status Text
+function showCameraStatus(msg) {
   const statusEl = document.getElementById('camera-status-msg');
   if (statusEl) statusEl.textContent = msg;
 }
