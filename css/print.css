@@ -1,0 +1,61 @@
+/* ==========================================================================
+   COMPANY PHONE TRACKER - PRINT STYLESHEET FOR QR LABELS
+   ========================================================================== */
+
+@media print {
+  /* Hide non-printable UI elements */
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .navbar,
+  .footer,
+  .btn,
+  .filter-bar,
+  .stats-grid,
+  .action-banner,
+  .nav-links,
+  .toast-container,
+  .no-print {
+    display: none !important;
+  }
+
+  .container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .view-section {
+    display: none !important;
+  }
+
+  #view-qr-print {
+    display: block !important;
+  }
+
+  .qr-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 15px !important;
+    page-break-inside: auto;
+  }
+
+  .qr-card {
+    border: 2px solid #000000 !important;
+    box-shadow: none !important;
+    padding: 10px !important;
+    page-break-inside: avoid;
+  }
+
+  .qr-card .qr-img {
+    width: 140px !important;
+    height: 140px !important;
+  }
+
+  .qr-card .phone-title {
+    color: #000000 !important;
+    font-size: 1.1rem !important;
+  }
+}
