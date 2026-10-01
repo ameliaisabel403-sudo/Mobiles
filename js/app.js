@@ -13,7 +13,53 @@ let cachedPhones = [];
 let cachedTransactions = [];
 let cachedEmployees = [];
 
+// Initialize Application on DOM Ready
+document.addEventListener('DOMContentLoaded', async () => {
+  // 1. Initialize Supabase Client
+  initSupabaseClient();
+  updateConfigStatusUI();
 
+  // 2. Initialize Auth & Session Listener
+  await initAuth((user) => {
+    updateAuthUI(user);
+    refreshDashboardData();
+  });
+
+  // 3. Setup Realtime Sync
+  setupRealtimeSync();
+
+  // 4. Register Navigation & Form Listeners
+  setupNavigation();
+  setupFormsAndModals();
+  setupSettingsPanel();
+
+  // 5. Load Initial Data
+  await refreshDashboardData();
+});
+
+// Setup Supabase Realtime Subscriptions + Auto Polling Fallback
+function setupRealtimeSync() {
+  if (appConfig.isConfigured && supabaseClient) {
+    try {
+      supabaseClient
+        .channel('schema-db-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'phones' }, () => {
+          refreshDashboardData();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+          refreshDashboardData();
+        })
+        .subscribe();
+    } catch (e) {
+      console.warn('Realtime note:', e);
+    }
+  }
+
+  // Polls every 8 seconds across all open devices for instant sync
+  setInterval(() => {
+    refreshDashboardData();
+  }, 8000);
+}
 
 // Refresh Dashboard Stats, Tables, and Data
 export async function refreshDashboardData() {
@@ -46,10 +92,15 @@ function renderKPIStats() {
     return tx.action === 'RETURN' && tx.timestamp && tx.timestamp.startsWith(todayStr);
   }).length;
 
-  document.getElementById('stat-total').textContent = totalCount;
-  document.getElementById('stat-available').textContent = availableCount;
-  document.getElementById('stat-issued').textContent = issuedCount;
-  document.getElementById('stat-returned-today').textContent = returnedTodayCount;
+  const elTotal = document.getElementById('stat-total');
+  const elAvail = document.getElementById('stat-available');
+  const elIssued = document.getElementById('stat-issued');
+  const elRet = document.getElementById('stat-returned-today');
+
+  if (elTotal) elTotal.textContent = totalCount;
+  if (elAvail) elAvail.textContent = availableCount;
+  if (elIssued) elIssued.textContent = issuedCount;
+  if (elRet) elRet.textContent = returnedTodayCount;
 }
 
 // Render Active Issued Phones List View
@@ -211,6 +262,8 @@ export function switchView(viewId) {
     renderQRMatrix('qr-matrix-container');
   }
 }
+window.switchView = switchView;
+window.refreshDashboardData = refreshDashboardData;
 
 // Forms & Modals Controller
 function setupFormsAndModals() {
@@ -229,7 +282,67 @@ function setupFormsAndModals() {
     });
   }
 
+  // 2. Issue Form Scan QR Button
+  const issueScanBtn = document.getElementById('btn-issue-scan-qr');
+  if (issueScanBtn) {
+    issueScanBtn.addEventListener('click', () => {
+      openScannerModal((scannedPhoneId) => {
+        const input = document.getElementById('issue-phone-id');
+        if (input) {
+          input.value = scannedPhoneId;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        showToast(`Scanned Phone: ${scannedPhoneId}`, 'success');
+      });
+    });
+  }
 
+  // 3. Issue Form Submit -> Open Confirmation Modal
+  const issueForm = document.getElementById('form-issue-phone');
+  if (issueForm) {
+    issueForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const phoneId = document.getElementById('issue-phone-id').value.trim().toUpperCase();
+      const empNum = document.getElementById('issue-emp-number').value.trim().toUpperCase();
+      const empName = document.getElementById('issue-emp-name').value.trim();
+
+      if (!phoneId || !empNum) {
+        showToast('Please enter both Employee Number and Phone ID.', 'warning');
+        return;
+      }
+
+      const phone = cachedPhones.find(p => p.id === phoneId);
+      if (phone && phone.status === 'ISSUED') {
+        showToast(`Error: ${phoneId} is ALREADY ISSUED to ${phone.current_employee_name || 'staff'}.`, 'error');
+        return;
+      }
+
+      openConfirmModal('ISSUE', {
+        phoneId,
+        empNum,
+        empName: empName || `Employee ${empNum}`,
+        time: new Date().toLocaleString()
+      });
+    });
+  }
+
+  // 4. Return Form Scan QR Button
+  const returnScanBtn = document.getElementById('btn-return-scan-qr');
+  if (returnScanBtn) {
+    returnScanBtn.addEventListener('click', () => {
+      openScannerModal((scannedPhoneId) => {
+        const input = document.getElementById('return-phone-id');
+        if (input) {
+          input.value = scannedPhoneId;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        handleReturnLookup(scannedPhoneId);
+        showToast(`Scanned Phone: ${scannedPhoneId}`, 'success');
+      });
+    });
+  }
 
   // Return Phone ID Manual Input Change -> Auto Lookup Holder
   const returnPhoneInput = document.getElementById('return-phone-id');
@@ -258,7 +371,6 @@ function setupFormsAndModals() {
         const res = await returnPhone({ phoneId, condition, notes });
         showToast(`✅ Successfully returned ${res.phoneId}. Marked as ${res.condition}.`, 'success');
         
-        // Reset Return Form
         returnForm.reset();
         document.getElementById('return-holder-info').innerHTML = '';
         await refreshDashboardData();
@@ -284,14 +396,22 @@ function setupFormsAndModals() {
       const val = e.target.value;
       if (val) {
         closeScannerModal();
-        // Trigger callback if scanner was opened
         const activeView = document.querySelector('.view-section.active').id;
         if (activeView === 'view-issue') {
-          document.getElementById('issue-phone-id').value = val;
+          const input = document.getElementById('issue-phone-id');
+          if (input) {
+            input.value = val;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          }
         } else if (activeView === 'view-return') {
-          document.getElementById('return-phone-id').value = val;
+          const input = document.getElementById('return-phone-id');
+          if (input) {
+            input.value = val;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          }
           handleReturnLookup(val);
         }
+        quickSelect.value = '';
       }
     });
   }
@@ -400,8 +520,11 @@ window.closeConfirmModal = function() {
 // Global Quick Return Helper from Dashboard Table
 window.quickReturnPhone = function(phoneId) {
   switchView('return');
-  document.getElementById('return-phone-id').value = phoneId;
-  handleReturnLookup(phoneId);
+  const input = document.getElementById('return-phone-id');
+  if (input) {
+    input.value = phoneId;
+    handleReturnLookup(phoneId);
+  }
 };
 
 // Setup Settings Modal & Supabase Credentials Config
