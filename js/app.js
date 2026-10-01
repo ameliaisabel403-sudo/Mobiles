@@ -13,26 +13,7 @@ let cachedPhones = [];
 let cachedTransactions = [];
 let cachedEmployees = [];
 
-// Initialize Application
-document.addEventListener('DOMContentLoaded', async () => {
-  // 1. Initialize Supabase Client
-  initSupabaseClient();
-  updateConfigStatusUI();
 
-  // 2. Initialize Auth & Session Listener
-  await initAuth((user) => {
-    updateAuthUI(user);
-    refreshDashboardData();
-  });
-
-  // 3. Register Event Listeners
-  setupNavigation();
-  setupFormsAndModals();
-  setupSettingsPanel();
-
-  // 4. Load Initial Data
-  await refreshDashboardData();
-});
 
 // Refresh Dashboard Stats, Tables, and Data
 export async function refreshDashboardData() {
@@ -248,58 +229,7 @@ function setupFormsAndModals() {
     });
   }
 
-  // 2. Issue Form Scan QR Button
-  const issueScanBtn = document.getElementById('btn-issue-scan-qr');
-  if (issueScanBtn) {
-    issueScanBtn.addEventListener('click', () => {
-      openScannerModal((scannedPhoneId) => {
-        document.getElementById('issue-phone-id').value = scannedPhoneId;
-        showToast(`Scanned Phone: ${scannedPhoneId}`, 'success');
-      });
-    });
-  }
 
-  // 3. Issue Form Submit -> Open Confirmation Modal
-  const issueForm = document.getElementById('form-issue-phone');
-  if (issueForm) {
-    issueForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const phoneId = document.getElementById('issue-phone-id').value.trim().toUpperCase();
-      const empNum = document.getElementById('issue-emp-number').value.trim().toUpperCase();
-      const empName = document.getElementById('issue-emp-name').value.trim();
-
-      if (!phoneId || !empNum) {
-        showToast('Please enter both Employee Number and Phone ID.', 'warning');
-        return;
-      }
-
-      // Check if phone is available
-      const phone = cachedPhones.find(p => p.id === phoneId);
-      if (phone && phone.status === 'ISSUED') {
-        showToast(`Error: ${phoneId} is ALREADY ISSUED to ${phone.current_employee_name || 'staff'}.`, 'error');
-        return;
-      }
-
-      // Show confirmation dialog
-      openConfirmModal('ISSUE', {
-        phoneId,
-        empNum,
-        empName: empName || `Employee ${empNum}`,
-        time: new Date().toLocaleString()
-      });
-    });
-  }
-
-  // 4. Return Form Scan QR Button
-  const returnScanBtn = document.getElementById('btn-return-scan-qr');
-  if (returnScanBtn) {
-    returnScanBtn.addEventListener('click', () => {
-      openScannerModal((scannedPhoneId) => {
-        document.getElementById('return-phone-id').value = scannedPhoneId;
-        handleReturnLookup(scannedPhoneId);
-      });
-    });
-  }
 
   // Return Phone ID Manual Input Change -> Auto Lookup Holder
   const returnPhoneInput = document.getElementById('return-phone-id');
