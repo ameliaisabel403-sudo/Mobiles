@@ -159,9 +159,14 @@
             
             <div class="form-group">
               <label class="form-label">Employee Number / ID</label>
-              <input type="text" id="issue-emp-number" class="form-input" placeholder="e.g. EMP-1001" list="employee-list-options" required />
+              <div style="display: flex; gap: 0.75rem;">
+                <input type="text" id="issue-emp-number" class="form-input" placeholder="e.g. EMP-1001" list="employee-list-options" required />
+                <button type="button" id="btn-issue-scan-employee-qr" class="btn btn-primary" style="white-space: nowrap;">
+                  👤 Scan Employee QR
+                </button>
+              </div>
               <datalist id="employee-list-options"></datalist>
-              <small style="color: var(--text-dim); display: block; margin-top: 4px;">Select or type employee ID (e.g. EMP-1001, EMP-1002)</small>
+              <small style="color: var(--text-dim); display: block; margin-top: 4px;">Scan the employee QR code, then scan the company phone QR code.</small>
             </div>
 
             <div class="form-group">
@@ -373,7 +378,7 @@
   <div id="scanner-modal" class="modal-overlay">
     <div class="modal-card">
       <div class="card-header" style="background: #0f172a; margin: 0; padding: 1.25rem;">
-        <h3 class="card-title">📷 Align Phone QR Tag in Box</h3>
+        <h3 class="card-title">📷 Align QR Code in Box</h3>
         <button id="btn-close-scanner" class="btn btn-sm btn-glass">✕ Close</button>
       </div>
       
@@ -383,7 +388,7 @@
 
       <div style="padding: 1.25rem; background: #1e293b; text-align: center;">
         <p id="camera-status-msg" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.75rem;">
-          Center the device QR code inside the camera viewfinder
+          Center the QR code inside the camera viewfinder
         </p>
 
         <div style="border-top: 1px solid var(--border-glass); padding-top: 0.75rem;">
