@@ -28,7 +28,13 @@
 
 <main>
 <section id="view-dashboard" class="view active">
-  <h1>Dashboard</h1>
+  <h1 class="page-title">Good day 👋</h1><p class="page-subtitle">What would you like to do?</p>
+  <div class="mobile-hint muted">Use the buttons below for daily phone issue and return tasks.</div>
+  <div class="card" style="margin-top:16px"><div class="card-head"><h2>Quick Actions</h2></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+  <button class="btn primary big-action" onclick="showView('employees')">👥 Manage Employees</button>
+  <button class="btn primary big-action" onclick="showView('issue')">📱 Give a Phone</button>
+  <button class="btn success big-action" onclick="showView('return')">↩️ Return a Phone</button>
+  </div></div>
   <div class="stats">
     <div class="stat"><b id="stat-total">20</b><span>Total Phones</span></div>
     <div class="stat"><b id="stat-available">0</b><span>Available</span></div>
@@ -44,14 +50,14 @@
 
 <section id="view-employees" class="view">
   <div class="card">
-    <div class="card-head"><h2>👤 Employee Management</h2><span class="muted">Add employee → QR is generated automatically</span></div>
+    <div class="card-head"><h2>👥 Employees</h2><span class="muted">Add and manage staff members</span></div>
     <form id="employeeForm" class="grid-form">
       <input type="hidden" id="employee-old-id">
-      <label>Employee ID<input id="employee-id" required placeholder="EMP-1001"></label>
+      <div class="step"><div class="step-num">1</div><div><h3>Identify Employee</h3></div></div><label>Employee ID<input id="employee-id" required placeholder="EMP-1001"></label>
       <label>Employee Name<input id="employee-name" required placeholder="Nehan Umayanga"></label>
       <label>Department<input id="employee-department" placeholder="Housekeeping"></label>
       <label>Phone Number<input id="employee-phone" placeholder="0771234567"></label>
-      <div class="form-actions"><button type="submit" class="btn primary" id="employee-save">Save Employee & Generate QR</button><button type="button" class="btn" id="employee-cancel">Clear</button></div>
+      <div class="form-actions"><button type="submit" class="btn primary" id="employee-save">Save Employee</button><button type="button" class="btn" id="employee-cancel">Clear</button></div>
     </form>
   </div>
   <div class="card">
@@ -62,15 +68,15 @@
 
 <section id="view-issue" class="view">
   <div class="card narrow">
-    <h2>📤 Issue Phone</h2>
-    <p class="muted">Scan Employee QR first, then scan the Phone QR.</p>
+    <h2>📱 Give a Phone to an Employee</h2>
+    <p class="muted">Follow these two simple steps.</p>
     <form id="issueForm">
       <label>Employee ID
         <div class="scan-row"><input id="issue-employee-id" list="employee-options" required placeholder="EMP-1001"><button type="button" id="scanEmployeeBtn" class="btn primary">👤 Scan Employee QR</button></div>
         <datalist id="employee-options"></datalist>
       </label>
       <label>Employee Name<input id="issue-employee-name" readonly></label>
-      <label>Phone ID
+      <div class="step"><div class="step-num">2</div><div><h3>Select Phone</h3></div></div><label>Phone ID
         <div class="scan-row"><input id="issue-phone-id" required placeholder="PHONE-001"><button type="button" id="scanIssuePhoneBtn" class="btn primary">📷 Scan Phone QR</button></div>
       </label>
       <button class="btn success wide" type="submit">Confirm Issue</button>
@@ -80,7 +86,7 @@
 
 <section id="view-return" class="view">
   <div class="card narrow">
-    <h2>📥 Return Phone</h2>
+    <h2>↩️ Return a Phone</h2>
     <form id="returnForm">
       <label>Phone ID<div class="scan-row"><input id="return-phone-id" required placeholder="PHONE-001"><button type="button" id="scanReturnPhoneBtn" class="btn primary">📷 Scan Phone QR</button></div></label>
       <div id="return-holder"></div>
@@ -103,12 +109,12 @@
 </section>
 
 <section id="view-phones-qr" class="view">
-  <div class="card"><div class="card-head"><h2>📱 Phone QR Labels</h2><button class="btn primary" onclick="window.print()">🖨 Print</button></div><p class="muted">Each QR contains its Phone ID.</p></div>
+  <div class="card"><div class="card-head"><h2>📱 Phone QR Labels</h2><button class="btn primary" onclick="window.print()">🖨 Print</button></div><p class="muted">Print these labels and attach them to company phones.</p></div>
   <div id="phone-qr-grid" class="qr-grid"></div>
 </section>
 
 <section id="view-employees-qr" class="view">
-  <div class="card"><div class="card-head"><h2>👤 Employee QR Labels</h2><button class="btn primary" onclick="window.print()">🖨 Print</button></div><p class="muted">Employee QR codes are generated from saved employee data.</p></div>
+  <div class="card"><div class="card-head"><h2>👤 Employee QR Labels</h2><button class="btn primary" onclick="window.print()">🖨 Print</button></div><p class="muted">Print an employee QR after adding them.</p></div>
   <div id="employee-qr-grid" class="qr-grid"></div>
 </section>
 </main>
