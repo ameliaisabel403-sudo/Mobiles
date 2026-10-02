@@ -3,189 +3,115 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Company Phone Tracking System</title>
-<link rel="stylesheet" href="css/main.css">
+<title>PhoneTrack - Company Phone System</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<style id="phonetrack-embedded-style">
-*{box-sizing:border-box}
-:root{--bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#64748b;--line:#e2e8f0;--blue:#2563eb;--green:#059669;--red:#dc2626;--orange:#d97706}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif;font-size:16px}
-header{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line);padding:12px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;box-shadow:0 2px 10px #00000008}
-.brand{font-size:21px;font-weight:800;white-space:nowrap;color:#172033}.brand span{margin-left:5px}
-nav{display:flex;gap:5px;flex:1;flex-wrap:wrap}.nav{border:0;background:transparent;color:#475569;border-radius:9px;padding:10px 12px;cursor:pointer;font-weight:600}.nav:hover{background:#eff6ff;color:var(--blue)}.nav.active{background:#eff6ff;color:var(--blue)}
-.top-right{display:flex;align-items:center;gap:8px}.badge{display:inline-block;padding:6px 9px;border-radius:999px;background:#e2e8f0;color:#475569;font-size:12px;font-weight:700}.badge.live{background:#dcfce7;color:#166534}.badge.issue{background:#fef3c7;color:#92400e}
-.btn{border:1px solid var(--line);background:#fff;color:#334155;border-radius:9px;padding:10px 14px;cursor:pointer;font-weight:600;transition:.15s}.btn:hover{box-shadow:0 3px 10px #00000010}.primary{background:var(--blue);border-color:var(--blue);color:#fff}.success{background:var(--green);border-color:var(--green);color:#fff}.danger{background:#fff1f2;border-color:#fecdd3;color:#be123c}
-.view{display:none;max-width:1250px;margin:auto;padding:28px 22px}.view.active{display:block}
-.page-title{margin-bottom:5px}.page-subtitle{color:var(--muted);margin-top:0}
-.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:20px 0}.stat{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:20px;box-shadow:0 2px 8px #00000005}.stat b{font-size:31px;display:block}.stat span{color:var(--muted);font-size:13px;margin-top:5px;display:block}
-.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:20px;margin-bottom:18px;box-shadow:0 2px 8px #00000005}.card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}.card-head h2{margin:0}
-.muted{color:var(--muted)}.center{text-align:center}.narrow{max-width:700px;margin:0 auto}
-.grid-form{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}label{display:block;color:#475569;font-size:14px;font-weight:600}input,select,textarea{width:100%;margin-top:7px;background:#fff;color:var(--text);border:1px solid #cbd5e1;border-radius:9px;padding:12px;font:inherit}input:focus,select:focus,textarea:focus{outline:2px solid #bfdbfe;border-color:var(--blue)}
-.form-actions{grid-column:1/-1;display:flex;gap:8px}.scan-row{display:flex;gap:8px}.scan-row input{flex:1}.wide{width:100%;margin-top:16px;padding:14px}
-.step{display:flex;gap:12px;align-items:center;margin:18px 0 8px}.step-num{width:32px;height:32px;border-radius:50%;background:#dbeafe;color:var(--blue);display:grid;place-items:center;font-weight:800}.step h3{margin:0;font-size:16px}
-.big-action{width:100%;padding:16px;font-size:16px;margin-top:8px}.success-box{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;padding:14px;border-radius:10px;margin:14px 0}
-.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse}th,td{padding:12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{color:#64748b;font-size:12px;text-transform:uppercase}
-.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:15px;flex-wrap:wrap}.search{max-width:300px;margin:0}
-.qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:15px}.qr-card{background:#fff;color:#111;border:1px solid var(--line);border-radius:13px;padding:16px;text-align:center}.qr-card .qr{width:150px;height:150px;margin:10px auto}.qr-card button{margin:4px}
-.modal{display:none;position:fixed;inset:0;background:#0008;z-index:100;align-items:center;justify-content:center;padding:15px}.modal.open{display:flex}.modal-box{background:#fff;border-radius:15px;width:min(700px,100%);max-height:92vh;overflow:auto;padding:18px}.modal-box.narrow{width:min(520px,100%)}#qr-reader{width:100%;min-height:280px;background:#111827;border-radius:10px;overflow:hidden}.quick{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.holder{background:#eff6ff;border:1px solid #bfdbfe;padding:14px;border-radius:10px;margin:12px 0}.row-actions{display:flex;gap:6px;flex-wrap:wrap}.small{font-size:12px}
-#toast{position:fixed;right:18px;bottom:18px;z-index:200;max-width:380px}.toast{background:#172033;color:#fff;padding:13px 16px;border-radius:9px;margin-top:8px}.toast.error{background:#991b1b}.toast.success{background:#047857}.toast.warn{background:#b45309}
-#loader{display:none;position:fixed;top:0;left:0;width:100%;height:3px;background:var(--blue);z-index:300}
-.mobile-hint{display:none}
-@media(max-width:900px){header{position:static;padding:12px}.mobile-hint{display:block}.stats{grid-template-columns:repeat(2,1fr)}nav{order:3;width:100%;overflow-x:auto;flex-wrap:nowrap}.nav{white-space:nowrap}.grid-form{grid-template-columns:1fr}.form-actions{grid-column:auto}.view{padding:20px 13px}.card{padding:16px}.top-right{margin-left:auto}}
-@media(max-width:600px){body{font-size:15px}.brand{font-size:18px}.top-right .btn{padding:8px}.stats{grid-template-columns:repeat(2,1fr);gap:8px}.stat{padding:14px}.stat b{font-size:25px}.stat span{font-size:12px}.scan-row{flex-direction:column}.scan-row .btn{width:100%}.grid-form{gap:12px}.card-head{align-items:flex-start;flex-direction:column}.toolbar .search{max-width:none;width:100%}table{font-size:13px}.view{padding-top:15px}}
-@media print{header,.btn,.card:not(:has(.qr-grid)),.modal,#toast{display:none!important}.view{display:none!important}.view.active{display:block}.qr-grid{grid-template-columns:repeat(3,1fr)}body{background:white}.qr-card{break-inside:avoid}}
-
-.home-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:850px;margin:24px auto 5px}
-.home-btn{min-height:150px;border:1px solid var(--line);border-radius:16px;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:18px;transition:.15s}
-.home-btn:hover{transform:translateY(-2px);box-shadow:0 7px 20px #00000012}
-.home-btn span{font-size:38px}.home-btn b{font-size:18px}.home-btn small{color:var(--muted);font-size:13px}
-.issue-btn{border-color:#bfdbfe}.return-btn{border-color:#a7f3d0}.employee-btn{border-color:#ddd6fe}.status-btn{border-color:#fed7aa}
-@media(max-width:600px){.home-actions{grid-template-columns:1fr;gap:10px}.home-btn{min-height:112px;flex-direction:row;justify-content:flex-start;text-align:left}.home-btn span{font-size:30px;width:45px;text-align:center}.home-btn b,.home-btn small{display:block}}
-
-</style>
-
-<style id="phonetrack-critical-style">
-html,body{margin:0!important;padding:0!important}
-.view{display:none!important}
-.view.active{display:block!important}
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#172033;font-family:Arial,sans-serif}
+header{background:#173b68;color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-size:21px;font-weight:800}.settings{border:0;background:#ffffff20;color:#fff;border-radius:9px;padding:9px 12px;cursor:pointer}
+main{max-width:900px;margin:auto;padding:18px}
+.screen{display:none}.screen.active{display:block}
+h1,h2{margin:0 0 8px}.sub{color:#64748b;margin:0 0 18px}
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+.home-btn{border:0;border-radius:18px;padding:28px 18px;min-height:155px;cursor:pointer;color:#fff;text-align:left;box-shadow:0 5px 15px #0001}
+.home-btn:hover{transform:translateY(-2px)}.home-btn .ico{font-size:38px}.home-btn b{display:block;font-size:19px;margin-top:14px}.home-btn small{display:block;margin-top:5px;font-size:13px;opacity:.9}
+.issue{background:#168f5b}.return{background:#2376db}.employees{background:#7654c8}.status{background:#e59a20}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 2px 10px #00000008}
+.back{border:0;background:none;color:#2563eb;font-weight:700;cursor:pointer;padding:0;margin-bottom:15px}
+.step{background:#f1f6ff;border-radius:13px;padding:15px;margin:12px 0}.step-title{font-weight:800;margin-bottom:9px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;font-size:15px;margin:6px 0 10px}
+button{font:inherit}.btn{border:0;border-radius:9px;padding:12px 15px;cursor:pointer;font-weight:700}.blue{background:#2563eb;color:#fff}.green{background:#059669;color:#fff}.red{background:#dc2626;color:#fff}.gray{background:#e2e8f0;color:#334155}
+.full{width:100%;margin-top:5px}.scan{display:flex;gap:7px}.scan input{margin:0}.scan button{white-space:nowrap}
+.info{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:13px;margin:10px 0}.warning{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:13px}
+.list{display:flex;flex-direction:column;gap:9px}.item{border:1px solid #e2e8f0;border-radius:12px;padding:13px;display:flex;justify-content:space-between;gap:10px;align-items:center}.item strong{display:block}.item small{color:#64748b}.actions{display:flex;gap:6px;flex-wrap:wrap}.pill{display:inline-block;padding:5px 9px;border-radius:99px;font-size:12px;font-weight:700}.available{background:#dcfce7;color:#166534}.issued{background:#fee2e2;color:#991b1b}.damaged{background:#ffedd5;color:#9a3412}
+.empty{text-align:center;color:#64748b;padding:25px}.topline{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+#toast{position:fixed;bottom:18px;right:18px;z-index:99}.toast{background:#172033;color:#fff;padding:12px 15px;border-radius:9px;margin-top:7px;box-shadow:0 4px 15px #0003}.toast.ok{background:#047857}.toast.err{background:#991b1b}
+.modal{display:none;position:fixed;inset:0;background:#0008;z-index:100;align-items:center;justify-content:center;padding:15px}.modal.open{display:flex}.modalbox{background:#fff;border-radius:15px;padding:18px;width:min(500px,100%);max-height:90vh;overflow:auto}
+#reader{width:100%;min-height:280px;background:#111;border-radius:10px;overflow:hidden}
+@media(max-width:600px){main{padding:12px}.home-grid{grid-template-columns:1fr;gap:10px}.home-btn{min-height:115px;padding:18px}.home-btn .ico{font-size:30px}.home-btn b{margin-top:5px}.scan{flex-direction:column}.scan button{width:100%}.item{align-items:flex-start;flex-direction:column}.actions,.actions .btn{width:100%}}
 </style>
 </head>
 <body>
-<div id="loader"></div>
-<header>
-  <div class="brand">📱 <span>PhoneTrack</span></div>
-  <nav>
-    <button class="nav active" data-view="dashboard">Dashboard</button>
-    <button class="nav" data-view="employees">Employees</button>
-    <button class="nav" data-view="issue">Issue Phone</button>
-    <button class="nav" data-view="return">Return Phone</button>
-    <button class="nav" data-view="status">Phone Status</button>
-    <button class="nav" data-view="reports">Reports</button>
-    <button class="nav" data-view="phones-qr">Phone QR</button>
-    <button class="nav" data-view="employees-qr">Employee QR</button>
-  </nav>
-  <div class="top-right"><span id="db-badge" class="badge">DEMO MODE</span><button id="settingsBtn" class="btn">⚙ Settings</button></div>
-</header>
-
+<header><div class="brand">📱 PhoneTrack</div><button class="settings" id="settingsBtn">⚙ Settings</button></header>
 <main>
-<section id="view-dashboard" class="view active">
-  <div class="card center" style="padding:30px 20px">
-    <h1 style="margin:0 0 6px">📱 Company Phone System</h1>
-    <p class="muted" style="margin-top:0">Choose what you want to do</p>
-
-    <div class="home-actions">
-      <button class="home-btn issue-btn" id="homeIssue">
-        <span>📱</span><b>ISSUE PHONE</b><small>Give a phone to an employee</small>
-      </button>
-      <button class="home-btn return-btn" id="homeReturn">
-        <span>↩️</span><b>RETURN PHONE</b><small>Receive a phone from an employee</small>
-      </button>
-      <button class="home-btn employee-btn" id="homeEmployees">
-        <span>👥</span><b>EMPLOYEES</b><small>Add or find employees</small>
-      </button>
-      <button class="home-btn status-btn" id="homeStatus">
-        <span>📋</span><b>PHONE STATUS</b><small>See available and issued phones</small>
-      </button>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-head">
-      <h2 style="margin:0">Phones Currently Out</h2>
-      <button class="btn" id="dashboardRefresh">↻ Refresh</button>
-    </div>
-    <div id="active-issued"></div>
-  </div>
+<section id="home" class="screen active">
+<div class="card" style="text-align:center;padding:24px 15px"><h1>Company Phone System</h1><p class="sub">Simple • Fast • Easy</p>
+<div class="home-grid">
+<button class="home-btn issue" id="goIssue"><span class="ico">📱</span><b>Issue Phone</b><small>Give a phone to an employee</small></button>
+<button class="home-btn return" id="goReturn"><span class="ico">↩️</span><b>Return Phone</b><small>Receive a phone from an employee</small></button>
+<button class="home-btn employees" id="goEmployees"><span class="ico">👥</span><b>Employees</b><small>Add or find employees</small></button>
+<button class="home-btn status" id="goStatus"><span class="ico">📋</span><b>Phone Status</b><small>See available and issued phones</small></button>
+</div></div>
+<div class="card"><div class="topline"><h2>Phones Currently Out</h2><button class="btn gray" id="refreshBtn">↻ Refresh</button></div><div id="outList"></div></div>
 </section>
 
-<section id="view-employees" class="view">
-  <div class="card">
-    <div class="card-head"><h2>👥 Employees</h2><span class="muted">Add and manage staff members</span></div>
-    <form id="employeeForm" class="grid-form">
-      <input type="hidden" id="employee-old-id">
-      <div class="step"><div class="step-num">1</div><div><h3>Identify Employee</h3></div></div><label>Employee ID<input id="employee-id" required placeholder="EMP-1001"></label>
-      <label>Employee Name<input id="employee-name" required placeholder="Nehan Umayanga"></label>
-      <label>Department<input id="employee-department" placeholder="Housekeeping"></label>
-      <label>Phone Number<input id="employee-phone" placeholder="0771234567"></label>
-      <div class="form-actions"><button type="submit" class="btn primary" id="employee-save">Save Employee</button><button type="button" class="btn" id="employee-cancel">Clear</button></div>
-    </form>
-  </div>
-  <div class="card">
-    <div class="card-head"><h2>Employee List</h2><input id="employee-search" class="search" placeholder="Search employee..."></div>
-    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Department</th><th>Phone</th><th>QR</th><th>Actions</th></tr></thead><tbody id="employees-body"></tbody></table></div>
-  </div>
-</section>
+<section id="issueScreen" class="screen"><button class="back" data-back>← Back</button><div class="card"><h2>📱 Issue Phone</h2><p class="sub">Complete these two steps.</p>
+<div class="step"><div class="step-title">1. Scan Employee QR</div><div class="scan"><input id="issueEmp" placeholder="EMP-1001"><button class="btn blue" id="scanEmp">📷 Scan</button></div><div id="empInfo"></div></div>
+<div class="step"><div class="step-title">2. Scan Phone QR</div><div class="scan"><input id="issuePhone" placeholder="PHONE-001"><button class="btn blue" id="scanIssuePhone">📷 Scan</button></div><div id="phoneInfo"></div></div>
+<button class="btn green full" id="confirmIssue">✓ Give Phone</button></div></section>
 
-<section id="view-issue" class="view">
-  <div class="card narrow">
-    <h2>📱 Give a Phone to an Employee</h2>
-    <p class="muted">Follow these two simple steps.</p>
-    <form id="issueForm">
-      <label>Employee ID
-        <div class="scan-row"><input id="issue-employee-id" list="employee-options" required placeholder="EMP-1001"><button type="button" id="scanEmployeeBtn" class="btn primary">👤 Scan Employee QR</button></div>
-        <datalist id="employee-options"></datalist>
-      </label>
-      <label>Employee Name<input id="issue-employee-name" readonly></label>
-      <div class="step"><div class="step-num">2</div><div><h3>Select Phone</h3></div></div><label>Phone ID
-        <div class="scan-row"><input id="issue-phone-id" required placeholder="PHONE-001"><button type="button" id="scanIssuePhoneBtn" class="btn primary">📷 Scan Phone QR</button></div>
-      </label>
-      <button class="btn success wide" type="submit">Confirm Issue</button>
-    </form>
-  </div>
-</section>
+<section id="returnScreen" class="screen"><button class="back" data-back>← Back</button><div class="card"><h2>↩️ Return Phone</h2><p class="sub">Scan the phone and confirm its condition.</p>
+<div class="step"><div class="step-title">Scan Phone QR</div><div class="scan"><input id="returnPhone" placeholder="PHONE-001"><button class="btn blue" id="scanReturnPhone">📷 Scan</button></div><div id="holderInfo"></div></div>
+<label>Condition<select id="condition"><option value="Good">Good</option><option value="Damaged">Damaged</option></select></label>
+<label>Notes<textarea id="notes" placeholder="Optional notes"></textarea></label>
+<button class="btn red full" id="confirmReturn">↩ Return Phone</button></div></section>
 
-<section id="view-return" class="view">
-  <div class="card narrow">
-    <h2>↩️ Return a Phone</h2>
-    <form id="returnForm">
-      <label>Phone ID<div class="scan-row"><input id="return-phone-id" required placeholder="PHONE-001"><button type="button" id="scanReturnPhoneBtn" class="btn primary">📷 Scan Phone QR</button></div></label>
-      <div id="return-holder"></div>
-      <label>Condition<select id="return-condition"><option>Good</option><option>Damaged</option></select></label>
-      <label>Notes<textarea id="return-notes" placeholder="Optional notes"></textarea></label>
-      <button class="btn success wide" type="submit">Confirm Return</button>
-    </form>
-  </div>
-</section>
+<section id="employeesScreen" class="screen"><button class="back" data-back>← Back</button><div class="card"><div class="topline"><div><h2>👥 Employees</h2><p class="sub" style="margin:0">Add or find employees</p></div><button class="btn blue" id="showAdd">+ Add</button></div><input id="search" placeholder="Search name or employee ID..."><div id="employeeList" class="list"></div></div>
+<div class="card" id="addCard" style="display:none"><h2>Add Employee</h2><label>Employee ID<input id="newId" placeholder="EMP-1001"></label><label>Name<input id="newName" placeholder="Employee name"></label><label>Department<input id="newDept" placeholder="Department"></label><label>Phone Number<input id="newPhone" placeholder="0771234567"></label><div class="actions"><button class="btn green" id="saveEmployee">Save Employee</button><button class="btn gray" id="cancelAdd">Cancel</button></div></div></section>
 
-<section id="view-status" class="view">
-  <div class="card"><h2>📋 Phone Status</h2><div class="table-wrap"><table><thead><tr><th>Phone</th><th>Status</th><th>Employee ID</th><th>Employee</th><th>Condition</th><th>Last Issue</th><th>Last Return</th></tr></thead><tbody id="phones-body"></tbody></table></div></div>
-</section>
-
-<section id="view-reports" class="view">
-  <div class="card">
-    <div class="toolbar"><input id="report-search" class="search" placeholder="Search employee or phone"><select id="report-action"><option>ALL</option><option>ISSUE</option><option>RETURN</option></select><button id="exportBtn" class="btn success">⬇ Export CSV</button></div>
-    <div class="table-wrap"><table><thead><tr><th>Date</th><th>Action</th><th>Phone</th><th>Employee ID</th><th>Employee</th><th>Condition</th><th>Notes</th><th>Staff</th></tr></thead><tbody id="reports-body"></tbody></table></div>
-  </div>
-</section>
-
-<section id="view-phones-qr" class="view">
-  <div class="card"><div class="card-head"><h2>📱 Phone QR Labels</h2><button class="btn primary" onclick="window.print()">🖨 Print</button></div><p class="muted">Print these labels and attach them to company phones.</p></div>
-  <div id="phone-qr-grid" class="qr-grid"></div>
-</section>
-
-<section id="view-employees-qr" class="view">
-  <div class="card"><div class="card-head"><h2>👤 Employee QR Labels</h2><button class="btn primary" onclick="window.print()">🖨 Print</button></div><p class="muted">Print an employee QR after adding them.</p></div>
-  <div id="employee-qr-grid" class="qr-grid"></div>
-</section>
+<section id="statusScreen" class="screen"><button class="back" data-back>← Back</button><div class="card"><div class="topline"><h2>📋 Phone Status</h2><button class="btn gray" id="statusRefresh">↻ Refresh</button></div><div id="statusList" class="list"></div></div></section>
 </main>
 
-<div id="scanner" class="modal"><div class="modal-box">
-  <div class="card-head"><h2 id="scanner-title">📷 Scan QR</h2><button class="btn" id="closeScanner">✕</button></div>
-  <div id="qr-reader"></div><p id="scanner-status" class="muted center">Starting camera...</p>
-  <div id="quick-area"></div>
-</div></div>
+<div id="scannerModal" class="modal"><div class="modalbox"><div class="topline"><h2>Scan QR Code</h2><button class="btn gray" id="closeScanner">✕</button></div><div id="reader"></div><p id="scanMsg" class="sub">Point the camera at the QR code.</p></div></div>
 
-<div id="settings" class="modal"><div class="modal-box narrow">
-  <div class="card-head"><h2>⚙ Supabase Settings</h2><button class="btn" id="closeSettings">✕</button></div>
-  <label>Supabase URL<input id="supabase-url" placeholder="https://xxxx.supabase.co"></label>
-  <label>Supabase Anon Key<input id="supabase-key" type="password" placeholder="eyJ..."></label>
-  <button id="saveSettings" class="btn primary wide">Save & Connect</button>
-  <p class="muted">Use only the public anon key, never a service_role key.</p>
-</div></div>
-
+<div id="settingsModal" class="modal"><div class="modalbox"><div class="topline"><h2>Settings</h2><button class="btn gray" id="closeSettings">✕</button></div>
+<p class="sub">Optional Supabase connection. The app works in local mode if these are empty.</p>
+<label>Supabase URL<input id="sbUrl"></label><label>Supabase Anon Key<textarea id="sbKey"></textarea></label>
+<button class="btn blue full" id="saveSettings">Save Settings</button></div></div>
 <div id="toast"></div>
-<script type="module" src="js/app.js"></script>
+
+<script>
+const $=id=>document.getElementById(id);
+let employees=JSON.parse(localStorage.getItem("pt_employees")||"[]");
+let phones=JSON.parse(localStorage.getItem("pt_phones")||"");
+if(!Array.isArray(phones)||!phones.length){phones=Array.from({length:20},(_,i)=>({id:"PHONE-"+String(i+1).padStart(3,"0"),status:"AVAILABLE",employeeId:"",employeeName:"",department:"",condition:"Good",issuedAt:""}));saveLocal()}
+let transactions=JSON.parse(localStorage.getItem("pt_transactions")||"[]");
+let sb=null,scanner=null,scanTarget=null;
+
+function saveLocal(){localStorage.setItem("pt_phones",JSON.stringify(phones));localStorage.setItem("pt_employees",JSON.stringify(employees));localStorage.setItem("pt_transactions",JSON.stringify(transactions))}
+function toast(msg,type=""){let d=document.createElement("div");d.className="toast "+type;d.textContent=msg;$("toast").appendChild(d);setTimeout(()=>d.remove(),3000)}
+function screen(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));$(id).classList.add("active");window.scrollTo(0,0)}
+function employee(id){return employees.find(e=>e.id===String(id).trim().toUpperCase())}
+function phone(id){return phones.find(p=>p.id===String(id).trim().toUpperCase())}
+function renderAll(){renderOut();renderEmployees();renderStatus()}
+function renderOut(){let a=phones.filter(p=>p.status==="ISSUED");$("outList").innerHTML=a.length?a.map(p=>`<div class="item"><div><strong>📱 ${p.id}</strong><small>👤 ${p.employeeName||"-"} · ${p.employeeId||""}</small></div><button class="btn red" onclick="quickReturn('${p.id}')">Return</button></div>`).join(""):'<div class="empty">✅ No phones are currently issued.</div>'}
+function renderEmployees(){let q=($("search")?.value||"").toLowerCase();let a=employees.filter(e=>(e.id+" "+e.name+" "+e.department).toLowerCase().includes(q));$("employeeList").innerHTML=a.length?a.map(e=>`<div class="item"><div><strong>👤 ${e.name}</strong><small>${e.id} · ${e.department||"No department"}${e.phone?" · "+e.phone:""}</small></div><div class="actions"><button class="btn blue" onclick="showEmpQR('${e.id}')">QR</button><button class="btn gray" onclick="deleteEmp('${e.id}')">Delete</button></div></div>`).join(""):'<div class="empty">No employees yet.</div>'}
+function renderStatus(){let a=phones;$("statusList").innerHTML=a.map(p=>`<div class="item"><div><strong>📱 ${p.id}</strong><small>${p.employeeName?p.employeeName+" · "+p.employeeId:"Available"}</small></div><span class="pill ${p.status==="ISSUED"?"issued":"available"}">${p.status==="ISSUED"?"Issued":"Available"}</span></div>`).join("")}
+function updateEmpInfo(){let e=employee($("issueEmp").value);$("empInfo").innerHTML=e?`<div class="info">👤 <b>${e.name}</b><br>${e.id} · ${e.department||"Staff"}</div>`:$("issueEmp").value?'<div class="warning">Employee not found.</div>':""}
+function updatePhoneInfo(){let p=phone($("issuePhone").value);$("phoneInfo").innerHTML=p?`<div class="${p.status==="AVAILABLE"?"info":"warning"}">📱 <b>${p.id}</b><br>${p.status==="AVAILABLE"?"Available":"Already issued to "+p.employeeName}</div>`:$("issuePhone").value?'<div class="warning">Phone not found.</div>':""}
+function updateHolder(){let p=phone($("returnPhone").value);$("holderInfo").innerHTML=p?`<div class="${p.status==="ISSUED"?"info":"warning"}">${p.status==="ISSUED"?`👤 <b>${p.employeeName}</b><br>${p.employeeId}`:"This phone is already available."}</div>`:'<div class="warning">Phone not found.</div>'}
+function issue(){let e=employee($("issueEmp").value),p=phone($("issuePhone").value);if(!e)return toast("Please select a valid employee.","err");if(!p)return toast("Please select a valid phone.","err");if(p.status==="ISSUED")return toast("This phone is already issued.","err");p.status="ISSUED";p.employeeId=e.id;p.employeeName=e.name;p.department=e.department;p.issuedAt=new Date().toISOString();p.condition="Good";transactions.unshift({time:p.issuedAt,action:"ISSUE",phone:p.id,employee:e.id,name:e.name});saveLocal();renderAll();$("issueEmp").value="";$("issuePhone").value="";$("empInfo").innerHTML="";$("phoneInfo").innerHTML="";toast("Phone issued successfully.","ok");screen("home")}
+function ret(){let p=phone($("returnPhone").value);if(!p)return toast("Please select a valid phone.","err");if(p.status!=="ISSUED")return toast("This phone is already available.","err");transactions.unshift({time:new Date().toISOString(),action:"RETURN",phone:p.id,employee:p.employeeId,name:p.employeeName,condition:$("condition").value,notes:$("notes").value});p.status="AVAILABLE";p.employeeId="";p.employeeName="";p.department="";p.issuedAt="";p.condition=$("condition").value;saveLocal();renderAll();$("returnPhone").value="";$("holderInfo").innerHTML="";$("notes").value="";toast("Phone returned successfully.","ok");screen("home")}
+function quickReturn(id){$("returnPhone").value=id;updateHolder();screen("returnScreen")}
+function deleteEmp(id){if(!confirm("Delete this employee?"))return;if(phones.some(p=>p.employeeId===id))return toast("Cannot delete an employee who has a phone.","err");employees=employees.filter(e=>e.id!==id);saveLocal();renderEmployees();toast("Employee deleted.","ok")}
+function showEmpQR(id){let e=employee(id);if(e)toast("Employee QR: "+e.id+" (use the QR scanner after adding a QR label)")}
+async function startScan(target){scanTarget=target;$("scannerModal").classList.add("open");$("scanMsg").textContent="Starting camera...";try{scanner=new Html5Qrcode("reader");await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:240,height:240}},async text=>{if(scanner){await scanner.stop().catch(()=>{});scanner=null}$("scannerModal").classList.remove("open");scanTarget(text);scanTarget=null}) ;$("scanMsg").textContent="Point the camera at the QR code."}catch(e){$("scanMsg").textContent="Camera could not start. Enter the ID manually.";toast("Camera unavailable. You can type the ID.","err")}}
+$("goIssue").onclick=()=>screen("issueScreen");$("goReturn").onclick=()=>screen("returnScreen");$("goEmployees").onclick=()=>screen("employeesScreen");$("goStatus").onclick=()=>screen("statusScreen");$("refreshBtn").onclick=renderAll;$("statusRefresh").onclick=renderStatus;
+document.querySelectorAll("[data-back]").forEach(b=>b.onclick=()=>screen("home"));
+$("issueEmp").oninput=updateEmpInfo;$("issuePhone").oninput=updatePhoneInfo;$("returnPhone").oninput=updateHolder;
+$("confirmIssue").onclick=issue;$("confirmReturn").onclick=ret;
+$("showAdd").onclick=()=>{$("addCard").style.display="block";$("newId").focus()};$("cancelAdd").onclick=()=>{$("addCard").style.display="none"};
+$("search").oninput=renderEmployees;
+$("saveEmployee").onclick=()=>{let id=$("newId").value.trim().toUpperCase(),name=$("newName").value.trim(),dept=$("newDept").value.trim(),ph=$("newPhone").value.trim();if(!id||!name)return toast("Employee ID and name are required.","err");if(employee(id))return toast("Employee ID already exists.","err");employees.push({id,name,department:dept,phone:ph});saveLocal();renderEmployees();$("newId").value=$("newName").value=$("newDept").value=$("newPhone").value="";$("addCard").style.display="none";toast("Employee added successfully.","ok")};
+$("scanEmp").onclick=()=>startScan(text=>{$("issueEmp").value=text;updateEmpInfo()});
+$("scanIssuePhone").onclick=()=>startScan(text=>{$("issuePhone").value=text;updatePhoneInfo()});
+$("scanReturnPhone").onclick=()=>startScan(text=>{$("returnPhone").value=text;updateHolder()});
+$("closeScanner").onclick=async()=>{if(scanner){await scanner.stop().catch(()=>{});scanner=null}$("scannerModal").classList.remove("open")};
+$("settingsBtn").onclick=()=>{$("sbUrl").value=localStorage.getItem("pt_sb_url")||"";$("sbKey").value=localStorage.getItem("pt_sb_key")||"";$("settingsModal").classList.add("open")};
+$("closeSettings").onclick=()=>$("settingsModal").classList.remove("open");
+$("saveSettings").onclick=()=>{localStorage.setItem("pt_sb_url",$("sbUrl").value.trim());localStorage.setItem("pt_sb_key",$("sbKey").value.trim());$("settingsModal").classList.remove("open");toast("Settings saved.","ok")};
+renderAll();
+</script>
 </body>
 </html>
