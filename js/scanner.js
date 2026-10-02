@@ -1,168 +1,494 @@
 /* ==========================================================================
-   COMPANY PHONE TRACKER - FOOLPROOF CAMERA QR SCANNER & PARSER
+   COMPANY PHONE TRACKER - CAMERA QR SCANNER & PARSER
    ========================================================================== */
 
 let html5QrCodeScanner = null;
 let currentScanCallback = null;
 
-// Foolproof QR Payload Parser: Converts ANY text containing 1-20 into 'PHONE-XXX'
+// Convert QR text into PHONE-001 ... PHONE-020
 export function parsePhoneIdFromQR(scannedText) {
   if (!scannedText) return '';
+
   let str = String(scannedText).trim();
 
-  // 1. Remove URL prefix if scanned from web link
+  // Remove URL prefix if QR contains a URL
   if (str.includes('/')) {
     const parts = str.split('/').filter(p => p.length > 0);
     str = parts[parts.length - 1] || str;
   }
 
-  // 2. Extract any digits 1 to 20 (e.g., '1', '001', 'PHONE-1', 'phone001', 'Device #5')
+  // Extract number
   const digitMatch = str.match(/(\d+)/);
+
   if (digitMatch && digitMatch[1]) {
     const num = parseInt(digitMatch[1], 10);
+
     if (num >= 1 && num <= 20) {
       return `PHONE-${String(num).padStart(3, '0')}`;
     }
   }
 
-  // 3. Fallback: Upper-case clean string
   return str.toUpperCase();
 }
 
-// Crisp Audio Beep Feedback via Web Audio API
+
+// Beep when QR is detected
 function playBeepSound() {
   try {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioCtx.createOscillator();
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContext) return;
+
+    const audioCtx = new AudioContext();
+
+    const oscillator = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
 
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
 
-    osc.connect(gain);
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(
+      0.01,
+      audioCtx.currentTime + 0.15
+    );
+
+    oscillator.connect(gain);
     gain.connect(audioCtx.destination);
 
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.15);
-  } catch (e) {}
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + 0.15);
+
+  } catch (e) {
+    console.warn('Beep error:', e);
+  }
 }
 
-// Open Camera Scanner Modal
+
+// ================================================================
+// OPEN SCANNER
+// ================================================================
+
 export function openScannerModal(onScanSuccess) {
+
   currentScanCallback = onScanSuccess;
+
   const modal = document.getElementById('scanner-modal');
+
   if (modal) {
     modal.classList.add('active');
   }
 
-  // Wait 150ms for modal transition so #qr-reader has full layout dimensions
+  // Wait until modal is visible
   setTimeout(() => {
     initCameraStream();
-  }, 150);
+  }, 300);
 }
 
-// Close Camera Scanner Modal
+
+// ================================================================
+// CLOSE SCANNER
+// ================================================================
+
 export function closeScannerModal() {
+
   stopCameraStream();
+
   const modal = document.getElementById('scanner-modal');
+
   if (modal) {
     modal.classList.remove('active');
   }
+
   currentScanCallback = null;
 }
 
-// Initialize Camera Engine
-async function initCameraStream() {
-  const qrRegion = document.getElementById('qr-reader');
-  if (!qrRegion) return;
 
-  showCameraStatus('⌛ Starting camera engine...');
+// ================================================================
+// START CAMERA
+// ================================================================
+
+async function initCameraStream() {
+
+  const qrRegion = document.getElementById('qr-reader');
+
+  if (!qrRegion) {
+    console.error('QR reader element not found.');
+    return;
+  }
+
+  showCameraStatus('⌛ Checking camera...');
 
   try {
-    if (window.Html5Qrcode) {
-      if (html5QrCodeScanner) {
-        await stopCameraStream();
-      }
 
-      html5QrCodeScanner = new window.Html5Qrcode("qr-reader");
+    // Stop any previous scanner
+    if (html5QrCodeScanner) {
+      await stopCameraStream();
+    }
 
-      const config = {
-        fps: 15,
-        qrbox: (viewfinderWidth, viewfinderHeight) => {
-          const minDim = Math.min(viewfinderWidth, viewfinderHeight);
-          return { width: Math.floor(minDim * 0.8), height: Math.floor(minDim * 0.8) };
-        },
-        aspectRatio: 1.0
-      };
+    // Check library
+    if (!window.Html5Qrcode) {
 
-      // Try starting rear back camera ('environment')
-      await html5QrCodeScanner.start(
-        { facingMode: "environment" },
-        config,
-        (decodedText) => {
-          handleScanResult(decodedText);
-        },
-        (errorMessage) => {}
+      showCameraStatus(
+        '❌ QR scanner library is not loaded. Please refresh the page.'
       );
 
-      showCameraStatus('🟢 Camera Active. Point camera at Phone QR Code.');
+      return;
+    }
+
+
+    // Check browser camera support
+    if (
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ) {
+
+      showCameraStatus(
+        '❌ Camera is not supported by this browser.'
+      );
+
+      return;
+    }
+
+
+    // Create scanner
+    html5QrCodeScanner = new window.Html5Qrcode('qr-reader');
+
+
+    showCameraStatus('⌛ Finding camera...');
+
+
+    // Get available cameras
+    let cameras = [];
+
+    try {
+
+      cameras = await window.Html5Qrcode.getCameras();
+
+    } catch (cameraError) {
+
+      console.warn(
+        'Unable to list cameras:',
+        cameraError
+      );
+
+    }
+
+
+    // Select rear camera
+    let selectedCamera = null;
+
+    if (cameras && cameras.length > 0) {
+
+      selectedCamera =
+        cameras.find(camera =>
+          /back|rear|environment|world/i.test(
+            camera.label || ''
+          )
+        ) || cameras[cameras.length - 1];
+
+    }
+
+
+    let cameraSource;
+
+
+    if (selectedCamera) {
+
+      cameraSource = {
+        deviceId: {
+          exact: selectedCamera.id
+        }
+      };
+
     } else {
-      showCameraStatus('⚠️ Camera library loading... Try clicking Scan again.');
+
+      // Fallback
+      cameraSource = {
+        facingMode: 'environment'
+      };
+
     }
-  } catch (err) {
-    console.warn('Primary camera note:', err);
-    // Fallback: try default camera if facingMode environment fails
-    try {
-      if (html5QrCodeScanner) {
-        await html5QrCodeScanner.start(
-          true, // Use any default camera
-          { fps: 15, qrbox: { width: 220, height: 220 } },
-          (decodedText) => handleScanResult(decodedText),
-          () => {}
-        );
-        showCameraStatus('🟢 Camera Active (Default). Point at QR Code.');
-        return;
+
+
+    // Scanner configuration
+    const config = {
+
+      fps: 10,
+
+      qrbox: (
+        viewfinderWidth,
+        viewfinderHeight
+      ) => {
+
+        const minDimension =
+          Math.min(
+            viewfinderWidth,
+            viewfinderHeight
+          );
+
+        const size =
+          Math.max(
+            180,
+            Math.floor(
+              minDimension * 0.75
+            )
+          );
+
+        return {
+          width: size,
+          height: size
+        };
+
+      },
+
+      aspectRatio: 1.0,
+
+      disableFlip: false
+
+    };
+
+
+    showCameraStatus(
+      '⌛ Starting camera...'
+    );
+
+
+    // Start camera
+    await html5QrCodeScanner.start(
+
+      cameraSource,
+
+      config,
+
+      decodedText => {
+
+        handleScanResult(decodedText);
+
+      },
+
+      () => {
+        // QR scan errors are normal
       }
-    } catch (fallbackErr) {
-      console.warn('Fallback camera note:', fallbackErr);
+
+    );
+
+
+    showCameraStatus(
+      '🟢 Camera Active. Point the camera at the Phone QR Code.'
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      'Camera start error:',
+      error
+    );
+
+
+    const message =
+      String(
+        error?.message ||
+        error ||
+        ''
+      );
+
+
+    if (
+      /permission|notallowed|denied/i.test(
+        message
+      )
+    ) {
+
+      showCameraStatus(
+        '❌ Camera permission denied. Allow camera access for this website and reload the page.'
+      );
+
+    } else if (
+      /notfound|no camera|device not found/i.test(
+        message
+      )
+    ) {
+
+      showCameraStatus(
+        '❌ No camera was found on this device.'
+      );
+
+    } else if (
+      location.protocol !== 'https:'
+    ) {
+
+      showCameraStatus(
+        '❌ Camera requires HTTPS. Use your Vercel HTTPS website.'
+      );
+
+    } else {
+
+      showCameraStatus(
+        `❌ Camera could not start: ${
+          message || 'Unknown camera error'
+        }`
+      );
+
     }
-    showCameraStatus('💡 Camera permission needed, or use quick select below.');
-  }
-}
 
-// Stop Camera Stream
-export async function stopCameraStream() {
-  if (html5QrCodeScanner) {
+
+    // Clean up
     try {
-      await html5QrCodeScanner.stop();
-      html5QrCodeScanner.clear();
+
+      if (html5QrCodeScanner) {
+        await html5QrCodeScanner.clear();
+      }
+
     } catch (e) {}
+
     html5QrCodeScanner = null;
+
   }
+
 }
 
-// Handle Successful QR Scan Result
-function handleScanResult(scannedRawValue) {
-  if (!scannedRawValue) return;
 
-  const cleanPhoneId = parsePhoneIdFromQR(scannedRawValue);
+// ================================================================
+// STOP CAMERA
+// ================================================================
 
+export async function stopCameraStream() {
+
+  if (!html5QrCodeScanner) {
+    return;
+  }
+
+  try {
+
+    await html5QrCodeScanner.stop();
+
+  } catch (e) {
+
+    console.warn(
+      'Camera stop warning:',
+      e
+    );
+
+  }
+
+
+  try {
+
+    html5QrCodeScanner.clear();
+
+  } catch (e) {}
+
+
+  html5QrCodeScanner = null;
+}
+
+
+// ================================================================
+// HANDLE SUCCESSFUL QR SCAN
+// ================================================================
+
+async function handleScanResult(scannedRawValue) {
+
+  if (!scannedRawValue) {
+    return;
+  }
+
+
+  const cleanPhoneId =
+    parsePhoneIdFromQR(
+      scannedRawValue
+    );
+
+
+  console.log(
+    'QR detected:',
+    scannedRawValue,
+    '→',
+    cleanPhoneId
+  );
+
+
+  // Beep
   playBeepSound();
 
+
+  // Vibrate Android
   if (navigator.vibrate) {
-    try { navigator.vibrate([100, 50, 100]); } catch (e) {}
+
+    try {
+
+      navigator.vibrate([
+        100,
+        50,
+        100
+      ]);
+
+    } catch (e) {}
+
   }
 
-  closeScannerModal();
 
-  if (currentScanCallback) {
-    currentScanCallback(cleanPhoneId);
+  // IMPORTANT:
+  // Save callback before stopping scanner.
+  // The old code cleared the callback too early.
+
+  const callback =
+    currentScanCallback;
+
+
+  // Stop camera
+  await stopCameraStream();
+
+
+  // Close modal
+  const modal =
+    document.getElementById(
+      'scanner-modal'
+    );
+
+  if (modal) {
+
+    modal.classList.remove(
+      'active'
+    );
+
   }
+
+
+  // Clear callback
+  currentScanCallback = null;
+
+
+  // Send Phone ID back to app.js
+  if (callback) {
+
+    callback(
+      cleanPhoneId
+    );
+
+  }
+
 }
 
-function showCameraStatus(msg) {
-  const statusEl = document.getElementById('camera-status-msg');
-  if (statusEl) statusEl.textContent = msg;
+
+// ================================================================
+// CAMERA STATUS MESSAGE
+// ================================================================
+
+function showCameraStatus(message) {
+
+  const statusElement =
+    document.getElementById(
+      'camera-status-msg'
+    );
+
+  if (statusElement) {
+
+    statusElement.textContent =
+      message;
+
+  }
+
 }
