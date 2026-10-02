@@ -261,9 +261,61 @@ export function switchView(viewId) {
   if (viewId === 'qr-print') {
     renderQRMatrix('qr-matrix-container');
   }
+
+  if (viewId === 'employee-qr-print') {
+    renderEmployeeQRMatrix();
+  }
 }
 window.switchView = switchView;
 window.refreshDashboardData = refreshDashboardData;
+
+// Employee QR labels. Uses database employees when available and sample
+// employees when the database is empty, so the page is immediately testable.
+function renderEmployeeQRMatrix() {
+  const container = document.getElementById('employee-qr-matrix-container');
+  if (!container) return;
+
+  const sampleEmployees = [
+    { employee_number: 'EMP-1001', full_name: 'Kasun Perera', department: 'Housekeeping' },
+    { employee_number: 'EMP-1002', full_name: 'Nimal Fernando', department: 'Housekeeping' },
+    { employee_number: 'EMP-1003', full_name: 'Chamara Silva', department: 'Food & Beverage' },
+    { employee_number: 'EMP-1004', full_name: 'Dilshan Kumar', department: 'Food & Beverage' },
+    { employee_number: 'EMP-1005', full_name: 'Tharindu Jayasinghe', department: 'Front Office' },
+    { employee_number: 'EMP-1006', full_name: 'Sandun Wijesinghe', department: 'Front Office' },
+    { employee_number: 'EMP-1007', full_name: 'Isuru Bandara', department: 'Engineering' },
+    { employee_number: 'EMP-1008', full_name: 'Kavindu Perera', department: 'Housekeeping' },
+    { employee_number: 'EMP-1009', full_name: 'Dinesh Silva', department: 'Security' },
+    { employee_number: 'EMP-1010', full_name: 'Akila Fernando', department: 'Food & Beverage' }
+  ];
+
+  const employees = cachedEmployees.length ? cachedEmployees : sampleEmployees;
+
+  container.innerHTML = employees.map((employee, index) => {
+    const id = String(employee.employee_number || '').trim().toUpperCase();
+    const name = employee.full_name || 'Employee';
+    const department = employee.department || 'Staff';
+    const qrId = `employee-qr-${index}`;
+
+    return `
+      <div class="qr-card" style="text-align:center; padding:1rem; break-inside:avoid;">\n        <div id="${qrId}" style="display:flex; justify-content:center; margin-bottom:0.75rem;"></div>\n        <strong style="font-size:1.05rem;">${id}</strong>\n        <div style="margin-top:0.25rem;">${name}</div>\n        <small style="color:var(--text-dim);">${department}</small>\n      </div>
+    `;
+  }).join('');
+
+  employees.forEach((employee, index) => {
+    const id = String(employee.employee_number || '').trim().toUpperCase();
+    const target = document.getElementById(`employee-qr-${index}`);
+    if (target && id && window.QRCode) {
+      new window.QRCode(target, {
+        text: id,
+        width: 150,
+        height: 150,
+        correctLevel: window.QRCode.CorrectLevel.M
+      });
+    }
+  });
+}
+
+window.renderEmployeeQRMatrix = renderEmployeeQRMatrix;
 
 // Forms & Modals Controller
 function setupFormsAndModals() {

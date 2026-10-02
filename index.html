@@ -47,7 +47,8 @@
           <li><button class="nav-btn" data-view="return">📥 Return Phone</button></li>
           <li><button class="nav-btn" data-view="status-table">📋 Phone Status</button></li>
           <li><button class="nav-btn" data-view="reports">📑 Reports</button></li>
-          <li><button class="nav-btn" data-view="qr-print">🏷️ QR Labels</button></li>
+          <li><button class="nav-btn" data-view="qr-print">🏷️ Phone QR Labels</button></li>
+          <li><button class="nav-btn" data-view="employee-qr-print">👤 Employee QR</button></li>
         </ul>
 
         <div class="nav-user">
@@ -359,6 +360,22 @@
           <!-- Populated via JS -->
         </div>
 
+      </section>
+
+      <!-- ===================================================================
+           VIEW 7: EMPLOYEE QR CODE GENERATOR & PRINT SHEET
+           =================================================================== -->
+      <section id="view-employee-qr-print" class="view-section">
+        <div class="card no-print" style="margin-bottom: 1.5rem;">
+          <div class="card-header">
+            <h3 class="card-title">👤 Employee QR Code Labels</h3>
+            <button class="btn btn-primary" onclick="window.print()">🖨️ Print Employee QR Labels</button>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Each QR code contains the employee ID. Scan an employee QR during phone issue to automatically identify the employee, then scan the phone QR.
+          </p>
+        </div>
+        <div id="employee-qr-matrix-container" class="qr-grid"></div>
       </section>
 
     </main>
