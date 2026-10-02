@@ -292,27 +292,49 @@ function renderEmployeeQRMatrix() {
 
   container.innerHTML = employees.map((employee, index) => {
     const id = String(employee.employee_number || '').trim().toUpperCase();
-    const name = employee.full_name || 'Employee';
-    const department = employee.department || 'Staff';
+    const name = String(employee.full_name || 'Employee');
+    const department = String(employee.department || 'Staff');
     const qrId = `employee-qr-${index}`;
 
     return `
-      <div class="qr-card" style="text-align:center; padding:1rem; break-inside:avoid;">\n        <div id="${qrId}" style="display:flex; justify-content:center; margin-bottom:0.75rem;"></div>\n        <strong style="font-size:1.05rem;">${id}</strong>\n        <div style="margin-top:0.25rem;">${name}</div>\n        <small style="color:var(--text-dim);">${department}</small>\n      </div>
+      <div class="qr-card" style="text-align:center; padding:1rem; break-inside:avoid;">
+        <div id="${qrId}" style="width:170px; min-height:170px; display:flex; align-items:center; justify-content:center; margin:0 auto 0.75rem; background:#fff; border-radius:8px;"></div>
+        <strong style="font-size:1.05rem;">${id}</strong>
+        <div style="margin-top:0.25rem;">${name}</div>
+        <small style="color:var(--text-dim);">${department}</small>
+      </div>
     `;
   }).join('');
 
-  employees.forEach((employee, index) => {
-    const id = String(employee.employee_number || '').trim().toUpperCase();
-    const target = document.getElementById(`employee-qr-${index}`);
-    if (target && id && window.QRCode) {
-      new window.QRCode(target, {
-        text: id,
-        width: 150,
-        height: 150,
-        correctLevel: window.QRCode.CorrectLevel.M
-      });
+  const generate = () => {
+    if (typeof window.QRCode !== 'function') {
+      container.insertAdjacentHTML('afterbegin', '<div style="padding:1rem;color:#fbbf24;">⚠️ QR generator library is not loaded. Please refresh the page.</div>');
+      return;
     }
-  });
+
+    employees.forEach((employee, index) => {
+      const id = String(employee.employee_number || '').trim().toUpperCase();
+      const target = document.getElementById(`employee-qr-${index}`);
+      if (!target || !id) return;
+
+      target.innerHTML = '';
+
+      try {
+        new window.QRCode(target, {
+          text: id,
+          width: 160,
+          height: 160,
+          correctLevel: window.QRCode.CorrectLevel.H
+        });
+      } catch (error) {
+        console.error('Employee QR generation failed:', id, error);
+        target.innerHTML = `<div style="color:#b91c1c;padding:1rem;font-size:0.8rem;">QR generation failed<br>${id}</div>`;
+      }
+    });
+  };
+
+  // Wait one frame so the QR containers are fully in the DOM/layout.
+  requestAnimationFrame(generate);
 }
 
 window.renderEmployeeQRMatrix = renderEmployeeQRMatrix;
