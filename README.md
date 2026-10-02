@@ -1,45 +1,34 @@
 # Company Phone Tracking System
 
-## What is included
+A modern, responsive, mobile-first Web Application for tracking company-owned Android phones (`PHONE-001` through `PHONE-020`). Built with HTML5, CSS3 Glassmorphism UI, Supabase Auth & PostgreSQL database, camera-based QR code scanning, and Vercel hosting readiness.
 
-- 20 company phone records: PHONE-001 to PHONE-020
-- Employee Management
-- Add employee with Employee ID, name, department and phone
-- Employee QR generated automatically after saving
-- Edit and remove employees
-- Employee QR scanning
-- Phone QR scanning
-- Issue phone workflow
-- Return phone workflow
-- Phone status
-- Reports
-- CSV export
-- Supabase database support
-- Demo/local mode when Supabase is not configured
-- Vercel-ready static website
+## Features
 
-## Supabase
+- 📱 **Issue Phone Workflow**: Enter Employee ID, scan phone QR code, review confirmation card, issue phone, and update DB status to `ISSUED`.
+- 🔄 **Return Phone Workflow**: Scan phone QR code without asking for Employee ID. System automatically looks up active employee, asks for device condition (`Good` / `Damaged`), logs transaction, and updates DB status to `AVAILABLE`.
+- 📊 **Real-time Dashboard**: Live counters (Total: 20, Available, Issued, Returned Today), active phone tracking cards, and full device matrix.
+- 📷 **Camera QR Scanner**: HTML5 real-time camera scanning for device QR tags + manual quick-select override for desktop testing.
+- 🏷️ **QR Code Generator & Printable Labels**: Dynamic QR codes generated for `PHONE-001` to `PHONE-020` with print label layout.
+- 📑 **Transaction Reports & CSV Export**: Search/filter transaction history by Employee, Phone ID, Action, or Date range. One-click CSV export.
+- 🔒 **Supabase Auth & RLS Security**: Row Level Security enabled for database tables, authenticated staff login/logout, and safe frontend key usage (Public Anon key only).
+- 💾 **Local Demo Mode Fallback**: Works out of the box with an interactive in-memory demo database before Supabase credentials are configured!
 
-1. Open Supabase SQL Editor.
-2. Run `schema.sql`.
-3. Open the website.
-4. Click Settings.
-5. Enter Supabase Project URL and public anon key.
-6. Save & Connect.
+---
 
-Do not use a service_role key in the browser.
+## Quick Setup Instructions
 
-## Vercel
+### 1. Run as a Web Application Locally
+Simply open `index.html` in any web browser (Chrome, Edge, Safari, Firefox) or serve using any static web server.
 
-Upload the complete project folder to Vercel. The root file is `index.html`.
+### 2. Connect to Supabase Database
+1. Go to [Supabase](https://supabase.com) and create a free project.
+2. In the Supabase Dashboard, go to **SQL Editor** and run the script provided in `schema.sql`.
+3. Go to **Project Settings -> API** and copy:
+   - `Project URL`
+   - `anon / public key`
+4. Open the Web Application, click the **Supabase Settings** button in the header (or settings gear), enter your `Project URL` and `Anon Key`, and click **Save & Connect**.
 
-## Employee workflow
-
-1. Open Employees.
-2. Enter Employee ID, name and department.
-3. Click Save Employee & Generate QR.
-4. Open Employee QR to print the QR.
-5. Open Issue Phone.
-6. Scan Employee QR.
-7. Scan Phone QR.
-8. Confirm Issue.
+### 3. Deploy to Vercel
+1. Push this repository to GitHub or upload the folder to Vercel.
+2. Select **Static Site** preset (Root Directory: `./`).
+3. Click **Deploy**. Your application is now live online!

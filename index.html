@@ -1,117 +1,469 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PhoneTrack - Company Phone System</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#172033;font-family:Arial,sans-serif}
-header{background:#173b68;color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
-.brand{font-size:21px;font-weight:800}.settings{border:0;background:#ffffff20;color:#fff;border-radius:9px;padding:9px 12px;cursor:pointer}
-main{max-width:900px;margin:auto;padding:18px}
-.screen{display:none}.screen.active{display:block}
-h1,h2{margin:0 0 8px}.sub{color:#64748b;margin:0 0 18px}
-.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
-.home-btn{border:0;border-radius:18px;padding:28px 18px;min-height:155px;cursor:pointer;color:#fff;text-align:left;box-shadow:0 5px 15px #0001}
-.home-btn:hover{transform:translateY(-2px)}.home-btn .ico{font-size:38px}.home-btn b{display:block;font-size:19px;margin-top:14px}.home-btn small{display:block;margin-top:5px;font-size:13px;opacity:.9}
-.issue{background:#168f5b}.return{background:#2376db}.employees{background:#7654c8}.status{background:#e59a20}
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 2px 10px #00000008}
-.back{border:0;background:none;color:#2563eb;font-weight:700;cursor:pointer;padding:0;margin-bottom:15px}
-.step{background:#f1f6ff;border-radius:13px;padding:15px;margin:12px 0}.step-title{font-weight:800;margin-bottom:9px}
-input,select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;font-size:15px;margin:6px 0 10px}
-button{font:inherit}.btn{border:0;border-radius:9px;padding:12px 15px;cursor:pointer;font-weight:700}.blue{background:#2563eb;color:#fff}.green{background:#059669;color:#fff}.red{background:#dc2626;color:#fff}.gray{background:#e2e8f0;color:#334155}
-.full{width:100%;margin-top:5px}.scan{display:flex;gap:7px}.scan input{margin:0}.scan button{white-space:nowrap}
-.info{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:13px;margin:10px 0}.warning{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:13px}
-.list{display:flex;flex-direction:column;gap:9px}.item{border:1px solid #e2e8f0;border-radius:12px;padding:13px;display:flex;justify-content:space-between;gap:10px;align-items:center}.item strong{display:block}.item small{color:#64748b}.actions{display:flex;gap:6px;flex-wrap:wrap}.pill{display:inline-block;padding:5px 9px;border-radius:99px;font-size:12px;font-weight:700}.available{background:#dcfce7;color:#166534}.issued{background:#fee2e2;color:#991b1b}.damaged{background:#ffedd5;color:#9a3412}
-.empty{text-align:center;color:#64748b;padding:25px}.topline{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
-#toast{position:fixed;bottom:18px;right:18px;z-index:99}.toast{background:#172033;color:#fff;padding:12px 15px;border-radius:9px;margin-top:7px;box-shadow:0 4px 15px #0003}.toast.ok{background:#047857}.toast.err{background:#991b1b}
-.modal{display:none;position:fixed;inset:0;background:#0008;z-index:100;align-items:center;justify-content:center;padding:15px}.modal.open{display:flex}.modalbox{background:#fff;border-radius:15px;padding:18px;width:min(500px,100%);max-height:90vh;overflow:auto}
-#reader{width:100%;min-height:280px;background:#111;border-radius:10px;overflow:hidden}
-@media(max-width:600px){main{padding:12px}.home-grid{grid-template-columns:1fr;gap:10px}.home-btn{min-height:115px;padding:18px}.home-btn .ico{font-size:30px}.home-btn b{margin-top:5px}.scan{flex-direction:column}.scan button{width:100%}.item{align-items:flex-start;flex-direction:column}.actions,.actions .btn{width:100%}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Company Phone Tracking System | Android Device Management</title>
+  
+  <!-- SEO & Meta -->
+  <meta name="description" content="Online Company Phone Tracking System for tracking 20 company-owned Android phones, shift issuance, returns, QR code scanning, and Supabase integration." />
+  <meta name="theme-color" content="#090d16" />
+
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/print.css" />
+
+  <!-- External CDN Libraries -->
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- HTML5 QR Code Camera Scanner -->
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <!-- QRCode Generator JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
-<header><div class="brand">📱 PhoneTrack</div><button class="settings" id="settingsBtn">⚙ Settings</button></header>
-<main>
-<section id="home" class="screen active">
-<div class="card" style="text-align:center;padding:24px 15px"><h1>Company Phone System</h1><p class="sub">Simple • Fast • Easy</p>
-<div class="home-grid">
-<button class="home-btn issue" id="goIssue"><span class="ico">📱</span><b>Issue Phone</b><small>Give a phone to an employee</small></button>
-<button class="home-btn return" id="goReturn"><span class="ico">↩️</span><b>Return Phone</b><small>Receive a phone from an employee</small></button>
-<button class="home-btn employees" id="goEmployees"><span class="ico">👥</span><b>Employees</b><small>Add or find employees</small></button>
-<button class="home-btn status" id="goStatus"><span class="ico">📋</span><b>Phone Status</b><small>See available and issued phones</small></button>
-</div></div>
-<div class="card"><div class="topline"><h2>Phones Currently Out</h2><button class="btn gray" id="refreshBtn">↻ Refresh</button></div><div id="outList"></div></div>
-</section>
 
-<section id="issueScreen" class="screen"><button class="back" data-back>← Back</button><div class="card"><h2>📱 Issue Phone</h2><p class="sub">Complete these two steps.</p>
-<div class="step"><div class="step-title">1. Scan Employee QR</div><div class="scan"><input id="issueEmp" placeholder="EMP-1001"><button class="btn blue" id="scanEmp">📷 Scan</button></div><div id="empInfo"></div></div>
-<div class="step"><div class="step-title">2. Scan Phone QR</div><div class="scan"><input id="issuePhone" placeholder="PHONE-001"><button class="btn blue" id="scanIssuePhone">📷 Scan</button></div><div id="phoneInfo"></div></div>
-<button class="btn green full" id="confirmIssue">✓ Give Phone</button></div></section>
+  <div class="app-layout">
 
-<section id="returnScreen" class="screen"><button class="back" data-back>← Back</button><div class="card"><h2>↩️ Return Phone</h2><p class="sub">Scan the phone and confirm its condition.</p>
-<div class="step"><div class="step-title">Scan Phone QR</div><div class="scan"><input id="returnPhone" placeholder="PHONE-001"><button class="btn blue" id="scanReturnPhone">📷 Scan</button></div><div id="holderInfo"></div></div>
-<label>Condition<select id="condition"><option value="Good">Good</option><option value="Damaged">Damaged</option></select></label>
-<label>Notes<textarea id="notes" placeholder="Optional notes"></textarea></label>
-<button class="btn red full" id="confirmReturn">↩ Return Phone</button></div></section>
+    <!-- Global Progress Bar / Loader -->
+    <div id="global-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, #4f46e5, #06b6d4); z-index: 300; animation: pulse 1.5s infinite;"></div>
 
-<section id="employeesScreen" class="screen"><button class="back" data-back>← Back</button><div class="card"><div class="topline"><div><h2>👥 Employees</h2><p class="sub" style="margin:0">Add or find employees</p></div><button class="btn blue" id="showAdd">+ Add</button></div><input id="search" placeholder="Search name or employee ID..."><div id="employeeList" class="list"></div></div>
-<div class="card" id="addCard" style="display:none"><h2>Add Employee</h2><label>Employee ID<input id="newId" placeholder="EMP-1001"></label><label>Name<input id="newName" placeholder="Employee name"></label><label>Department<input id="newDept" placeholder="Department"></label><label>Phone Number<input id="newPhone" placeholder="0771234567"></label><div class="actions"><button class="btn green" id="saveEmployee">Save Employee</button><button class="btn gray" id="cancelAdd">Cancel</button></div></div></section>
+    <!-- Navigation Header -->
+    <header class="navbar no-print">
+      <div class="container nav-container">
+        
+        <a href="#" class="brand" onclick="window.location.reload();">
+          <div class="brand-icon">📱</div>
+          <div>
+            <div>PhoneTrack</div>
+            <div style="font-size: 0.68rem; font-weight: 400; color: var(--text-dim); letter-spacing: 0.05em;">ENTERPRISE MATRIX</div>
+          </div>
+        </a>
 
-<section id="statusScreen" class="screen"><button class="back" data-back>← Back</button><div class="card"><div class="topline"><h2>📋 Phone Status</h2><button class="btn gray" id="statusRefresh">↻ Refresh</button></div><div id="statusList" class="list"></div></div></section>
-</main>
+        <ul class="nav-links">
+          <li><button class="nav-btn active" data-view="dashboard">📊 Dashboard</button></li>
+          <li><button class="nav-btn" data-view="issue">📤 Issue Phone</button></li>
+          <li><button class="nav-btn" data-view="return">📥 Return Phone</button></li>
+          <li><button class="nav-btn" data-view="status-table">📋 Phone Status</button></li>
+          <li><button class="nav-btn" data-view="reports">📑 Reports</button></li>
+          <li><button class="nav-btn" data-view="qr-print">🏷️ QR Labels</button></li>
+        </ul>
 
-<div id="scannerModal" class="modal"><div class="modalbox"><div class="topline"><h2>Scan QR Code</h2><button class="btn gray" id="closeScanner">✕</button></div><div id="reader"></div><p id="scanMsg" class="sub">Point the camera at the QR code.</p></div></div>
+        <div class="nav-user">
+          <span id="db-mode-badge" class="badge badge-issued">⚡ DEMO DB MODE</span>
+          
+          <div class="user-badge">
+            <div class="user-avatar">👤</div>
+            <span id="nav-user-email">staff@company.com</span>
+          </div>
 
-<div id="settingsModal" class="modal"><div class="modalbox"><div class="topline"><h2>Settings</h2><button class="btn gray" id="closeSettings">✕</button></div>
-<p class="sub">Optional Supabase connection. The app works in local mode if these are empty.</p>
-<label>Supabase URL<input id="sbUrl"></label><label>Supabase Anon Key<textarea id="sbKey"></textarea></label>
-<button class="btn blue full" id="saveSettings">Save Settings</button></div></div>
-<div id="toast"></div>
+          <button id="btn-open-settings" class="btn btn-sm btn-glass" title="Supabase Settings">
+            ⚙️ Settings
+          </button>
+        </div>
 
-<script>
-const $=id=>document.getElementById(id);
-let employees=JSON.parse(localStorage.getItem("pt_employees")||"[]");
-let phones=JSON.parse(localStorage.getItem("pt_phones")||"");
-if(!Array.isArray(phones)||!phones.length){phones=Array.from({length:20},(_,i)=>({id:"PHONE-"+String(i+1).padStart(3,"0"),status:"AVAILABLE",employeeId:"",employeeName:"",department:"",condition:"Good",issuedAt:""}));saveLocal()}
-let transactions=JSON.parse(localStorage.getItem("pt_transactions")||"[]");
-let sb=null,scanner=null,scanTarget=null;
+      </div>
+    </header>
 
-function saveLocal(){localStorage.setItem("pt_phones",JSON.stringify(phones));localStorage.setItem("pt_employees",JSON.stringify(employees));localStorage.setItem("pt_transactions",JSON.stringify(transactions))}
-function toast(msg,type=""){let d=document.createElement("div");d.className="toast "+type;d.textContent=msg;$("toast").appendChild(d);setTimeout(()=>d.remove(),3000)}
-function screen(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));$(id).classList.add("active");window.scrollTo(0,0)}
-function employee(id){return employees.find(e=>e.id===String(id).trim().toUpperCase())}
-function phone(id){return phones.find(p=>p.id===String(id).trim().toUpperCase())}
-function renderAll(){renderOut();renderEmployees();renderStatus()}
-function renderOut(){let a=phones.filter(p=>p.status==="ISSUED");$("outList").innerHTML=a.length?a.map(p=>`<div class="item"><div><strong>📱 ${p.id}</strong><small>👤 ${p.employeeName||"-"} · ${p.employeeId||""}</small></div><button class="btn red" onclick="quickReturn('${p.id}')">Return</button></div>`).join(""):'<div class="empty">✅ No phones are currently issued.</div>'}
-function renderEmployees(){let q=($("search")?.value||"").toLowerCase();let a=employees.filter(e=>(e.id+" "+e.name+" "+e.department).toLowerCase().includes(q));$("employeeList").innerHTML=a.length?a.map(e=>`<div class="item"><div><strong>👤 ${e.name}</strong><small>${e.id} · ${e.department||"No department"}${e.phone?" · "+e.phone:""}</small></div><div class="actions"><button class="btn blue" onclick="showEmpQR('${e.id}')">QR</button><button class="btn gray" onclick="deleteEmp('${e.id}')">Delete</button></div></div>`).join(""):'<div class="empty">No employees yet.</div>'}
-function renderStatus(){let a=phones;$("statusList").innerHTML=a.map(p=>`<div class="item"><div><strong>📱 ${p.id}</strong><small>${p.employeeName?p.employeeName+" · "+p.employeeId:"Available"}</small></div><span class="pill ${p.status==="ISSUED"?"issued":"available"}">${p.status==="ISSUED"?"Issued":"Available"}</span></div>`).join("")}
-function updateEmpInfo(){let e=employee($("issueEmp").value);$("empInfo").innerHTML=e?`<div class="info">👤 <b>${e.name}</b><br>${e.id} · ${e.department||"Staff"}</div>`:$("issueEmp").value?'<div class="warning">Employee not found.</div>':""}
-function updatePhoneInfo(){let p=phone($("issuePhone").value);$("phoneInfo").innerHTML=p?`<div class="${p.status==="AVAILABLE"?"info":"warning"}">📱 <b>${p.id}</b><br>${p.status==="AVAILABLE"?"Available":"Already issued to "+p.employeeName}</div>`:$("issuePhone").value?'<div class="warning">Phone not found.</div>':""}
-function updateHolder(){let p=phone($("returnPhone").value);$("holderInfo").innerHTML=p?`<div class="${p.status==="ISSUED"?"info":"warning"}">${p.status==="ISSUED"?`👤 <b>${p.employeeName}</b><br>${p.employeeId}`:"This phone is already available."}</div>`:'<div class="warning">Phone not found.</div>'}
-function issue(){let e=employee($("issueEmp").value),p=phone($("issuePhone").value);if(!e)return toast("Please select a valid employee.","err");if(!p)return toast("Please select a valid phone.","err");if(p.status==="ISSUED")return toast("This phone is already issued.","err");p.status="ISSUED";p.employeeId=e.id;p.employeeName=e.name;p.department=e.department;p.issuedAt=new Date().toISOString();p.condition="Good";transactions.unshift({time:p.issuedAt,action:"ISSUE",phone:p.id,employee:e.id,name:e.name});saveLocal();renderAll();$("issueEmp").value="";$("issuePhone").value="";$("empInfo").innerHTML="";$("phoneInfo").innerHTML="";toast("Phone issued successfully.","ok");screen("home")}
-function ret(){let p=phone($("returnPhone").value);if(!p)return toast("Please select a valid phone.","err");if(p.status!=="ISSUED")return toast("This phone is already available.","err");transactions.unshift({time:new Date().toISOString(),action:"RETURN",phone:p.id,employee:p.employeeId,name:p.employeeName,condition:$("condition").value,notes:$("notes").value});p.status="AVAILABLE";p.employeeId="";p.employeeName="";p.department="";p.issuedAt="";p.condition=$("condition").value;saveLocal();renderAll();$("returnPhone").value="";$("holderInfo").innerHTML="";$("notes").value="";toast("Phone returned successfully.","ok");screen("home")}
-function quickReturn(id){$("returnPhone").value=id;updateHolder();screen("returnScreen")}
-function deleteEmp(id){if(!confirm("Delete this employee?"))return;if(phones.some(p=>p.employeeId===id))return toast("Cannot delete an employee who has a phone.","err");employees=employees.filter(e=>e.id!==id);saveLocal();renderEmployees();toast("Employee deleted.","ok")}
-function showEmpQR(id){let e=employee(id);if(e)toast("Employee QR: "+e.id+" (use the QR scanner after adding a QR label)")}
-async function startScan(target){scanTarget=target;$("scannerModal").classList.add("open");$("scanMsg").textContent="Starting camera...";try{scanner=new Html5Qrcode("reader");await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:240,height:240}},async text=>{if(scanner){await scanner.stop().catch(()=>{});scanner=null}$("scannerModal").classList.remove("open");scanTarget(text);scanTarget=null}) ;$("scanMsg").textContent="Point the camera at the QR code."}catch(e){$("scanMsg").textContent="Camera could not start. Enter the ID manually.";toast("Camera unavailable. You can type the ID.","err")}}
-$("goIssue").onclick=()=>screen("issueScreen");$("goReturn").onclick=()=>screen("returnScreen");$("goEmployees").onclick=()=>screen("employeesScreen");$("goStatus").onclick=()=>screen("statusScreen");$("refreshBtn").onclick=renderAll;$("statusRefresh").onclick=renderStatus;
-document.querySelectorAll("[data-back]").forEach(b=>b.onclick=()=>screen("home"));
-$("issueEmp").oninput=updateEmpInfo;$("issuePhone").oninput=updatePhoneInfo;$("returnPhone").oninput=updateHolder;
-$("confirmIssue").onclick=issue;$("confirmReturn").onclick=ret;
-$("showAdd").onclick=()=>{$("addCard").style.display="block";$("newId").focus()};$("cancelAdd").onclick=()=>{$("addCard").style.display="none"};
-$("search").oninput=renderEmployees;
-$("saveEmployee").onclick=()=>{let id=$("newId").value.trim().toUpperCase(),name=$("newName").value.trim(),dept=$("newDept").value.trim(),ph=$("newPhone").value.trim();if(!id||!name)return toast("Employee ID and name are required.","err");if(employee(id))return toast("Employee ID already exists.","err");employees.push({id,name,department:dept,phone:ph});saveLocal();renderEmployees();$("newId").value=$("newName").value=$("newDept").value=$("newPhone").value="";$("addCard").style.display="none";toast("Employee added successfully.","ok")};
-$("scanEmp").onclick=()=>startScan(text=>{$("issueEmp").value=text;updateEmpInfo()});
-$("scanIssuePhone").onclick=()=>startScan(text=>{$("issuePhone").value=text;updatePhoneInfo()});
-$("scanReturnPhone").onclick=()=>startScan(text=>{$("returnPhone").value=text;updateHolder()});
-$("closeScanner").onclick=async()=>{if(scanner){await scanner.stop().catch(()=>{});scanner=null}$("scannerModal").classList.remove("open")};
-$("settingsBtn").onclick=()=>{$("sbUrl").value=localStorage.getItem("pt_sb_url")||"";$("sbKey").value=localStorage.getItem("pt_sb_key")||"";$("settingsModal").classList.add("open")};
-$("closeSettings").onclick=()=>$("settingsModal").classList.remove("open");
-$("saveSettings").onclick=()=>{localStorage.setItem("pt_sb_url",$("sbUrl").value.trim());localStorage.setItem("pt_sb_key",$("sbKey").value.trim());$("settingsModal").classList.remove("open");toast("Settings saved.","ok")};
-renderAll();
-</script>
+    <!-- MAIN VIEW CONTAINER -->
+    <main class="container">
+
+      <!-- ===================================================================
+           VIEW 1: DASHBOARD OVERVIEW
+           =================================================================== -->
+      <section id="view-dashboard" class="view-section active">
+        
+        <!-- KPI Stat Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-info">
+              <span class="stat-label">Total Fleet</span>
+              <span class="stat-value" id="stat-total">20</span>
+            </div>
+            <div class="stat-icon">📦</div>
+          </div>
+
+          <div class="stat-card stat-available">
+            <div class="stat-info">
+              <span class="stat-label">Available</span>
+              <span class="stat-value" id="stat-available">--</span>
+            </div>
+            <div class="stat-icon">🟢</div>
+          </div>
+
+          <div class="stat-card stat-issued">
+            <div class="stat-info">
+              <span class="stat-label">Currently Issued</span>
+              <span class="stat-value" id="stat-issued">--</span>
+            </div>
+            <div class="stat-icon">📱</div>
+          </div>
+
+          <div class="stat-card stat-returned">
+            <div class="stat-info">
+              <span class="stat-label">Returned Today</span>
+              <span class="stat-value" id="stat-returned-today">--</span>
+            </div>
+            <div class="stat-icon">↩️</div>
+          </div>
+        </div>
+
+        <!-- Quick Action Cards -->
+        <div class="action-banner">
+          <div class="banner-card">
+            <div class="banner-title">
+              <span>📤</span> Issue Phone to Shift Staff
+            </div>
+            <p class="banner-desc">Enter employee number, scan phone QR code tag, and record shift hand-off.</p>
+            <button class="btn btn-primary btn-lg" onclick="window.switchView('issue')">
+              Launch Issue Workflow →
+            </button>
+          </div>
+
+          <div class="banner-card return-banner">
+            <div class="banner-title">
+              <span>📥</span> Return Phone at End of Shift
+            </div>
+            <p class="banner-desc">Scan phone QR code. System automatically identifies holder and records device condition.</p>
+            <button class="btn btn-cyan btn-lg" onclick="window.switchView('return')">
+              Launch Return Workflow →
+            </button>
+          </div>
+        </div>
+
+        <!-- Currently Issued Phones List -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">📱 Phones Currently Issued to Shift Workers</h3>
+            <button class="btn btn-sm btn-glass" onclick="window.refreshDashboardData()">🔄 Refresh Live Data</button>
+          </div>
+          <div id="active-issued-container">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================================
+           VIEW 2: ISSUE PHONE WORKFLOW
+           =================================================================== -->
+      <section id="view-issue" class="view-section">
+        <div class="card" style="max-width: 650px; margin: 0 auto;">
+          <div class="card-header">
+            <h3 class="card-title">📤 Issue Phone to Employee</h3>
+            <span class="badge badge-issued">STEP 1 OF 2</span>
+          </div>
+
+          <form id="form-issue-phone">
+            
+            <div class="form-group">
+              <label class="form-label">Employee Number / ID</label>
+              <input type="text" id="issue-emp-number" class="form-input" placeholder="e.g. EMP-1001" list="employee-list-options" required />
+              <datalist id="employee-list-options"></datalist>
+              <small style="color: var(--text-dim); display: block; margin-top: 4px;">Select or type employee ID (e.g. EMP-1001, EMP-1002)</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Employee Full Name (Auto-resolved)</label>
+              <input type="text" id="issue-emp-name" class="form-input" placeholder="Auto-fetches from database" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Phone ID (Scan QR Tag or Select)</label>
+              <div style="display: flex; gap: 0.75rem;">
+                <input type="text" id="issue-phone-id" class="form-input" placeholder="e.g. PHONE-001" required />
+                <button type="button" id="btn-issue-scan-qr" class="btn btn-primary" style="white-space: nowrap;">
+                  📷 Scan QR Code
+                </button>
+              </div>
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+              <button type="button" class="btn btn-glass" onclick="window.switchView('dashboard')">Cancel</button>
+              <button type="submit" class="btn btn-success btn-lg">Verify & Confirm Issue →</button>
+            </div>
+
+          </form>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VIEW 3: RETURN PHONE WORKFLOW
+           =================================================================== -->
+      <section id="view-return" class="view-section">
+        <div class="card" style="max-width: 650px; margin: 0 auto;">
+          <div class="card-header">
+            <h3 class="card-title">📥 Return Phone at End of Shift</h3>
+            <span class="badge badge-available">NO EMP ID REQUIRED</span>
+          </div>
+
+          <form id="form-return-phone">
+
+            <div class="form-group">
+              <label class="form-label">Scan Phone QR Code (or Type ID)</label>
+              <div style="display: flex; gap: 0.75rem;">
+                <input type="text" id="return-phone-id" class="form-input" placeholder="e.g. PHONE-001" required />
+                <button type="button" id="btn-return-scan-qr" class="btn btn-cyan" style="white-space: nowrap;">
+                  📷 Scan QR Code
+                </button>
+              </div>
+            </div>
+
+            <!-- Auto-detected Assigned Holder Card -->
+            <div id="return-holder-info" class="form-group">
+              <!-- Dynamically populated via JS -->
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Device Return Condition</label>
+              <select id="return-condition" class="form-select">
+                <option value="Good">✓ Good Condition (No damage)</option>
+                <option value="Damaged">⚠️ Damaged (Requires maintenance inspection)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Notes / Damage Description (Optional)</label>
+              <textarea id="return-notes" class="form-textarea" rows="2" placeholder="Note any scratches, battery issues, or accessories missing..."></textarea>
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+              <button type="button" class="btn btn-glass" onclick="window.switchView('dashboard')">Cancel</button>
+              <button type="submit" class="btn btn-cyan btn-lg">Confirm Phone Return ✓</button>
+            </div>
+
+          </form>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VIEW 4: PHONE STATUS MATRIX TABLE
+           =================================================================== -->
+      <section id="view-status-table" class="view-section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">📋 Complete Phone Fleet Status (PHONE-001 - PHONE-020)</h3>
+            <span class="badge badge-good">20 TOTAL DEVICES</span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Phone ID</th>
+                  <th>Current Status</th>
+                  <th>Employee #</th>
+                  <th>Holding Employee</th>
+                  <th>Last Issue Time</th>
+                  <th>Last Return Time</th>
+                  <th>Condition</th>
+                </tr>
+              </thead>
+              <tbody id="phone-status-table-body">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VIEW 5: TRANSACTION HISTORY & REPORTS
+           =================================================================== -->
+      <section id="view-reports" class="view-section">
+        
+        <div class="filter-bar">
+          <div style="flex: 1; min-width: 220px;">
+            <label class="form-label">Search Transaction</label>
+            <input type="text" id="filter-search" class="form-input" placeholder="Filter by Employee, Phone ID, or Staff..." />
+          </div>
+
+          <div style="width: 160px;">
+            <label class="form-label">Action Type</label>
+            <select id="filter-action" class="form-select">
+              <option value="ALL">All Actions</option>
+              <option value="ISSUE">ISSUE Only</option>
+              <option value="RETURN">RETURN Only</option>
+            </select>
+          </div>
+
+          <div style="width: 150px;">
+            <label class="form-label">Start Date</label>
+            <input type="date" id="filter-start-date" class="form-input" />
+          </div>
+
+          <div style="width: 150px;">
+            <label class="form-label">End Date</label>
+            <input type="date" id="filter-end-date" class="form-input" />
+          </div>
+
+          <div style="margin-top: 1.5rem;">
+            <button id="btn-export-csv" class="btn btn-success">
+              📥 Export CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">📜 Shift Transaction Logs</h3>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date & Time</th>
+                  <th>Action</th>
+                  <th>Phone ID</th>
+                  <th>Emp #</th>
+                  <th>Employee Name</th>
+                  <th>Condition</th>
+                  <th>Notes</th>
+                  <th>Staff User</th>
+                </tr>
+              </thead>
+              <tbody id="transactions-table-body">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================================
+           VIEW 6: QR CODE GENERATOR & PRINT SHEET
+           =================================================================== -->
+      <section id="view-qr-print" class="view-section">
+        
+        <div class="card no-print" style="margin-bottom: 1.5rem;">
+          <div class="card-header">
+            <h3 class="card-title">🏷️ Printable QR Code Matrix (PHONE-001 to PHONE-020)</h3>
+            <button class="btn btn-primary" onclick="window.print()">
+              🖨️ Print All QR Labels
+            </button>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Print these QR tags on sticker paper and affix them to the back of each company Android device. Scanning any QR tag with the built-in camera scanner will automatically identify the phone ID.
+          </p>
+        </div>
+
+        <div id="qr-matrix-container" class="qr-grid">
+          <!-- Populated via JS -->
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer no-print">
+      <div class="container">
+        Company Phone Tracking System &copy; 2026 | Supabase Powered | Enterprise Android Fleet Management
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ===================================================================
+       MODAL 1: CAMERA QR SCANNER MODAL
+       =================================================================== -->
+  <div id="scanner-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="card-header" style="background: #0f172a; margin: 0; padding: 1.25rem;">
+        <h3 class="card-title">📷 Align Phone QR Tag in Box</h3>
+        <button id="btn-close-scanner" class="btn btn-sm btn-glass">✕ Close</button>
+      </div>
+      
+      <div class="scanner-viewport">
+        <div id="qr-reader" style="width: 100%;"></div>
+      </div>
+
+      <div style="padding: 1.25rem; background: #1e293b; text-align: center;">
+        <p id="camera-status-msg" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.75rem;">
+          Center the device QR code inside the camera viewfinder
+        </p>
+
+        <div style="border-top: 1px solid var(--border-glass); padding-top: 0.75rem;">
+          <label style="font-size: 0.82rem; color: var(--text-dim); display: block; margin-bottom: 0.4rem;">
+            Testing on Desktop without camera? Select Phone ID:
+          </label>
+          <select id="scanner-quick-select" class="form-select" style="max-width: 280px; margin: 0 auto;">
+            <option value="">-- Quick Select for Testing --</option>
+            <option value="PHONE-001">PHONE-001</option>
+            <option value="PHONE-002">PHONE-002</option>
+            <option value="PHONE-003">PHONE-003</option>
+            <option value="PHONE-004">PHONE-004</option>
+            <option value="PHONE-005">PHONE-005</option>
+            <option value="PHONE-006">PHONE-006</option>
+            <option value="PHONE-007">PHONE-007</option>
+            <option value="PHONE-008">PHONE-008</option>
+            <option value="PHONE-009">PHONE-009</option>
+            <option value="PHONE-010">PHONE-010</option>
+            <option value="PHONE-011">PHONE-011</option>
+            <option value="PHONE-012">PHONE-012</option>
+            <option value="PHONE-013">PHONE-013</option>
+            <option value="PHONE-014">PHONE-014</option>
+            <option value="PHONE-015">PHONE-015</option>
+            <option value="PHONE-016">PHONE-016</option>
+            <option value="PHONE-017">PHONE-017</option>
+            <option value="PHONE-018">PHONE-018</option>
+            <option value="PHONE-019">PHONE-019</option>
+            <option value="PHONE-020">PHONE-020</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL 2: CONFIRMATION DIALOG MODAL
+       =================================================================== -->
+  <div id="confirm-modal" class="modal-overlay">
+    <div class="modal-card" style="padding: 1.5rem;" id="confirm-modal-body">
+      <!-- Populated via JS -->
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL 3: SUPABASE SETTINGS MODAL
+       =================================================================== -->
+  <div id="settings-modal" class="modal-overlay">
+    <div class="modal-card" style="padding: 1.5rem;">
+      <div class="card-header" style="padding-bottom: 0.75rem;">
+        <h3 class="card-title">⚙️ Supabase Credentials Configuration</h3>
+        <button id="btn-close-settings" class="btn btn-sm btn-glass">✕</button>
+      </div>
+
+      <form id="form-settings" style="margin-top: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Supabase Project URL</label>
+          <input type="url" id="setting-supabase-url" class="form-input" placeholder="https://your-project.supabase.co" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Supabase Public Anon Key</label>
+          <input type="password" id="setting-supabase-key" class="form-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." />
+        </div>
+
+        <p style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 1.25rem;">
+          🔒 Your keys are saved locally in your browser session. Never use a service_role key here.
+        </p>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+          <button type="submit" class="btn btn-primary">Save & Connect Supabase</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATIONS CONTAINER -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Main JavaScript App Launcher -->
+  <script type="module" src="js/app.js"></script>
+
 </body>
 </html>
