@@ -1,43 +1,35 @@
 /* ==========================================================================
-   COMPANY PHONE TRACKER - SMART QR CODE PARSER & SCANNER MODULE
+   COMPANY PHONE TRACKER - FOOLPROOF CAMERA QR SCANNER & PARSER
    ========================================================================== */
 
 let html5QrCodeScanner = null;
 let currentScanCallback = null;
 
-// Smart QR Payload Parser: Normalizes any scanned string into 'PHONE-XXX' format
+// Foolproof QR Payload Parser: Converts ANY text containing 1-20 into 'PHONE-XXX'
 export function parsePhoneIdFromQR(scannedText) {
   if (!scannedText) return '';
   let str = String(scannedText).trim();
 
-  // 1. Extract last segment if text is a URL (e.g. https://site.com/PHONE-005)
+  // 1. Remove URL prefix if scanned from web link
   if (str.includes('/')) {
     const parts = str.split('/').filter(p => p.length > 0);
     str = parts[parts.length - 1] || str;
   }
 
-  // 2. Match pattern 'PHONE-1', 'phone-001', 'PHONE001'
-  const match = str.match(/PHONE-?(\d+)/i);
-  if (match && match[1]) {
-    const num = parseInt(match[1], 10);
+  // 2. Extract any digits 1 to 20 (e.g., '1', '001', 'PHONE-1', 'phone001', 'Device #5')
+  const digitMatch = str.match(/(\d+)/);
+  if (digitMatch && digitMatch[1]) {
+    const num = parseInt(digitMatch[1], 10);
     if (num >= 1 && num <= 20) {
       return `PHONE-${String(num).padStart(3, '0')}`;
     }
   }
 
-  // 3. Match pure numbers e.g. '1', '01', '001'
-  if (/^\d+$/.test(str)) {
-    const num = parseInt(str, 10);
-    if (num >= 1 && num <= 20) {
-      return `PHONE-${String(num).padStart(3, '0')}`;
-    }
-  }
-
-  // 4. Default fallback: Clean uppercase string
+  // 3. Fallback: Upper-case clean string
   return str.toUpperCase();
 }
 
-// Audio Beep Feedback using Web Audio API
+// Crisp Audio Beep Feedback via Web Audio API
 function playBeepSound() {
   try {
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -46,7 +38,7 @@ function playBeepSound() {
 
     osc.type = 'sine';
     osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
 
     osc.connect(gain);
@@ -61,23 +53,32 @@ function playBeepSound() {
 export function openScannerModal(onScanSuccess) {
   currentScanCallback = onScanSuccess;
   const modal = document.getElementById('scanner-modal');
-  if (modal) modal.classList.add('active');
+  if (modal) {
+    modal.classList.add('active');
+  }
 
-  initCameraStream();
+  // Wait 150ms for modal transition so #qr-reader has full layout dimensions
+  setTimeout(() => {
+    initCameraStream();
+  }, 150);
 }
 
 // Close Camera Scanner Modal
 export function closeScannerModal() {
   stopCameraStream();
   const modal = document.getElementById('scanner-modal');
-  if (modal) modal.classList.remove('active');
+  if (modal) {
+    modal.classList.remove('active');
+  }
   currentScanCallback = null;
 }
 
-// Initialize Camera Stream
+// Initialize Camera Engine
 async function initCameraStream() {
   const qrRegion = document.getElementById('qr-reader');
   if (!qrRegion) return;
+
+  showCameraStatus('⌛ Starting camera engine...');
 
   try {
     if (window.Html5Qrcode) {
@@ -91,14 +92,12 @@ async function initCameraStream() {
         fps: 15,
         qrbox: (viewfinderWidth, viewfinderHeight) => {
           const minDim = Math.min(viewfinderWidth, viewfinderHeight);
-          return { width: Math.floor(minDim * 0.75), height: Math.floor(minDim * 0.75) };
+          return { width: Math.floor(minDim * 0.8), height: Math.floor(minDim * 0.8) };
         },
-        aspectRatio: 1.0,
-        experimentalFeatures: {
-          useBarCodeDetectorIfSupported: true
-        }
+        aspectRatio: 1.0
       };
 
+      // Try starting rear back camera ('environment')
       await html5QrCodeScanner.start(
         { facingMode: "environment" },
         config,
@@ -108,12 +107,28 @@ async function initCameraStream() {
         (errorMessage) => {}
       );
 
-      showCameraStatus('🟢 Camera Active. Point at Phone QR Tag.');
+      showCameraStatus('🟢 Camera Active. Point camera at Phone QR Code.');
     } else {
-      showCameraStatus('⚠️ Loading camera scanner...');
+      showCameraStatus('⚠️ Camera library loading... Try clicking Scan again.');
     }
   } catch (err) {
-    showCameraStatus('💡 Camera permission needed, or select Phone ID below.');
+    console.warn('Primary camera note:', err);
+    // Fallback: try default camera if facingMode environment fails
+    try {
+      if (html5QrCodeScanner) {
+        await html5QrCodeScanner.start(
+          true, // Use any default camera
+          { fps: 15, qrbox: { width: 220, height: 220 } },
+          (decodedText) => handleScanResult(decodedText),
+          () => {}
+        );
+        showCameraStatus('🟢 Camera Active (Default). Point at QR Code.');
+        return;
+      }
+    } catch (fallbackErr) {
+      console.warn('Fallback camera note:', fallbackErr);
+    }
+    showCameraStatus('💡 Camera permission needed, or use quick select below.');
   }
 }
 
@@ -128,11 +143,10 @@ export async function stopCameraStream() {
   }
 }
 
-// Handle Successful QR Scan
+// Handle Successful QR Scan Result
 function handleScanResult(scannedRawValue) {
   if (!scannedRawValue) return;
 
-  // Smart sanitize payload into valid 'PHONE-XXX'
   const cleanPhoneId = parsePhoneIdFromQR(scannedRawValue);
 
   playBeepSound();
