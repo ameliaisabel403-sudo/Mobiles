@@ -28,22 +28,31 @@
 
 <main>
 <section id="view-dashboard" class="view active">
-  <h1 class="page-title">Good day 👋</h1><p class="page-subtitle">What would you like to do?</p>
-  <div class="mobile-hint muted">Use the buttons below for daily phone issue and return tasks.</div>
-  <div class="card" style="margin-top:16px"><div class="card-head"><h2>Quick Actions</h2></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
-  <button class="btn primary big-action" onclick="showView('employees')">👥 Manage Employees</button>
-  <button class="btn primary big-action" onclick="showView('issue')">📱 Give a Phone</button>
-  <button class="btn success big-action" onclick="showView('return')">↩️ Return a Phone</button>
-  </div></div>
-  <div class="stats">
-    <div class="stat"><b id="stat-total">20</b><span>Total Phones</span></div>
-    <div class="stat"><b id="stat-available">0</b><span>Available</span></div>
-    <div class="stat"><b id="stat-issued">0</b><span>Issued</span></div>
-    <div class="stat"><b id="stat-returned">0</b><span>Returned Today</span></div>
-    <div class="stat"><b id="stat-employees">0</b><span>Employees</span></div>
+  <div class="card center" style="padding:30px 20px">
+    <h1 style="margin:0 0 6px">📱 Company Phone System</h1>
+    <p class="muted" style="margin-top:0">Choose what you want to do</p>
+
+    <div class="home-actions">
+      <button class="home-btn issue-btn" id="homeIssue">
+        <span>📱</span><b>ISSUE PHONE</b><small>Give a phone to an employee</small>
+      </button>
+      <button class="home-btn return-btn" id="homeReturn">
+        <span>↩️</span><b>RETURN PHONE</b><small>Receive a phone from an employee</small>
+      </button>
+      <button class="home-btn employee-btn" id="homeEmployees">
+        <span>👥</span><b>EMPLOYEES</b><small>Add or find employees</small>
+      </button>
+      <button class="home-btn status-btn" id="homeStatus">
+        <span>📋</span><b>PHONE STATUS</b><small>See available and issued phones</small>
+      </button>
+    </div>
   </div>
+
   <div class="card">
-    <div class="card-head"><h2>Currently Issued Phones</h2><button class="btn" onclick="refresh()">↻ Refresh</button></div>
+    <div class="card-head">
+      <h2 style="margin:0">Phones Currently Out</h2>
+      <button class="btn" id="dashboardRefresh">↻ Refresh</button>
+    </div>
     <div id="active-issued"></div>
   </div>
 </section>

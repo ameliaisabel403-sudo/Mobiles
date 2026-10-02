@@ -17,7 +17,14 @@ function showView(v){
  document.querySelectorAll(".nav").forEach(x=>x.classList.toggle("active",x.dataset.view===v));
  if(v==="phones-qr")renderPhoneQRs();if(v==="employees-qr")renderEmployeeQRs(employees);
 }
+window.showView=showView;
 function setupEvents(){
+ document.getElementById("homeIssue").onclick=()=>showView("issue");
+ document.getElementById("homeReturn").onclick=()=>showView("return");
+ document.getElementById("homeEmployees").onclick=()=>showView("employees");
+ document.getElementById("homeStatus").onclick=()=>showView("status");
+ document.getElementById("dashboardRefresh").onclick=()=>refresh();
+
  document.getElementById("settingsBtn").onclick=()=>{document.getElementById("supabase-url").value=appConfig.supabaseUrl;document.getElementById("supabase-key").value=appConfig.supabaseKey;document.getElementById("settings").classList.add("open")};
  document.getElementById("closeSettings").onclick=()=>document.getElementById("settings").classList.remove("open");
  document.getElementById("saveSettings").onclick=()=>{saveSupabaseConfig(document.getElementById("supabase-url").value,document.getElementById("supabase-key").value);document.getElementById("settings").classList.remove("open");updateBadge();refresh()};

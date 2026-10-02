@@ -25,3 +25,10 @@ nav{display:flex;gap:5px;flex:1;flex-wrap:wrap}.nav{border:0;background:transpar
 @media(max-width:900px){header{position:static;padding:12px}.mobile-hint{display:block}.stats{grid-template-columns:repeat(2,1fr)}nav{order:3;width:100%;overflow-x:auto;flex-wrap:nowrap}.nav{white-space:nowrap}.grid-form{grid-template-columns:1fr}.form-actions{grid-column:auto}.view{padding:20px 13px}.card{padding:16px}.top-right{margin-left:auto}}
 @media(max-width:600px){body{font-size:15px}.brand{font-size:18px}.top-right .btn{padding:8px}.stats{grid-template-columns:repeat(2,1fr);gap:8px}.stat{padding:14px}.stat b{font-size:25px}.stat span{font-size:12px}.scan-row{flex-direction:column}.scan-row .btn{width:100%}.grid-form{gap:12px}.card-head{align-items:flex-start;flex-direction:column}.toolbar .search{max-width:none;width:100%}table{font-size:13px}.view{padding-top:15px}}
 @media print{header,.btn,.card:not(:has(.qr-grid)),.modal,#toast{display:none!important}.view{display:none!important}.view.active{display:block}.qr-grid{grid-template-columns:repeat(3,1fr)}body{background:white}.qr-card{break-inside:avoid}}
+
+.home-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:850px;margin:24px auto 5px}
+.home-btn{min-height:150px;border:1px solid var(--line);border-radius:16px;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:18px;transition:.15s}
+.home-btn:hover{transform:translateY(-2px);box-shadow:0 7px 20px #00000012}
+.home-btn span{font-size:38px}.home-btn b{font-size:18px}.home-btn small{color:var(--muted);font-size:13px}
+.issue-btn{border-color:#bfdbfe}.return-btn{border-color:#a7f3d0}.employee-btn{border-color:#ddd6fe}.status-btn{border-color:#fed7aa}
+@media(max-width:600px){.home-actions{grid-template-columns:1fr;gap:10px}.home-btn{min-height:112px;flex-direction:row;justify-content:flex-start;text-align:left}.home-btn span{font-size:30px;width:45px;text-align:center}.home-btn b,.home-btn small{display:block}}
