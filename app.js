@@ -269,8 +269,7 @@ export function switchView(viewId) {
 window.switchView = switchView;
 window.refreshDashboardData = refreshDashboardData;
 
-// Employee QR labels. Uses database employees when available and sample
-// employees when the database is empty, so the page is immediately testable.
+// Employee QR labels
 function renderEmployeeQRMatrix() {
   const container = document.getElementById('employee-qr-matrix-container');
   if (!container) return;
@@ -288,17 +287,21 @@ function renderEmployeeQRMatrix() {
     { employee_number: 'EMP-1010', full_name: 'Akila Fernando', department: 'Food & Beverage' }
   ];
 
-  const employees = cachedEmployees.length ? cachedEmployees : sampleEmployees;
+  const employees = Array.isArray(cachedEmployees) && cachedEmployees.length
+    ? cachedEmployees
+    : sampleEmployees;
 
+  // Always render the employee information first.
   container.innerHTML = employees.map((employee, index) => {
     const id = String(employee.employee_number || '').trim().toUpperCase();
     const name = String(employee.full_name || 'Employee');
     const department = String(employee.department || 'Staff');
-    const qrId = `employee-qr-${index}`;
 
     return `
       <div class="qr-card" style="text-align:center; padding:1rem; break-inside:avoid;">
-        <div id="${qrId}" style="width:170px; min-height:170px; display:flex; align-items:center; justify-content:center; margin:0 auto 0.75rem; background:#fff; border-radius:8px;"></div>
+        <div id="employee-qr-${index}" style="width:150px;height:150px;margin:0 auto 0.75rem;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:8px;">
+          <span style="color:#111;font-size:12px;">Loading QR...</span>
+        </div>
         <strong style="font-size:1.05rem;">${id}</strong>
         <div style="margin-top:0.25rem;">${name}</div>
         <small style="color:var(--text-dim);">${department}</small>
@@ -307,8 +310,10 @@ function renderEmployeeQRMatrix() {
   }).join('');
 
   const generate = () => {
-    if (typeof window.QRCode !== 'function') {
-      container.insertAdjacentHTML('afterbegin', '<div style="padding:1rem;color:#fbbf24;">⚠️ QR generator library is not loaded. Please refresh the page.</div>');
+    if (!window.QRCode) {
+      container.querySelectorAll('[id^="employee-qr-"]').forEach(el => {
+        el.innerHTML = '<span style="color:#b91c1c;font-size:12px;">QR library not loaded</span>';
+      });
       return;
     }
 
@@ -318,23 +323,27 @@ function renderEmployeeQRMatrix() {
       if (!target || !id) return;
 
       target.innerHTML = '';
-
-      try {
-        new window.QRCode(target, {
-          text: id,
-          width: 160,
-          height: 160,
-          correctLevel: window.QRCode.CorrectLevel.H
-        });
-      } catch (error) {
-        console.error('Employee QR generation failed:', id, error);
-        target.innerHTML = `<div style="color:#b91c1c;padding:1rem;font-size:0.8rem;">QR generation failed<br>${id}</div>`;
-      }
+      new window.QRCode(target, {
+        text: id,
+        width: 150,
+        height: 150,
+        correctLevel: window.QRCode.CorrectLevel.M
+      });
     });
   };
 
-  // Wait one frame so the QR containers are fully in the DOM/layout.
-  requestAnimationFrame(generate);
+  // CDN may finish loading after app.js. Retry briefly if necessary.
+  generate();
+  if (!window.QRCode) {
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts++;
+      if (window.QRCode || attempts >= 20) {
+        clearInterval(timer);
+        generate();
+      }
+    }, 250);
+  }
 }
 
 window.renderEmployeeQRMatrix = renderEmployeeQRMatrix;
