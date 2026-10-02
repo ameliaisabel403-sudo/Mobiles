@@ -1,0 +1,23 @@
+PHONE TRACK USER-FRIENDLY VERSION
+
+IMPORTANT:
+Upload the ENTIRE project folder, not only index.html.
+
+The project must contain:
+index.html
+css/main.css
+js/app.js
+js/config.js
+js/database.js
+js/qr-generator.js
+js/reports.js
+js/scanner.js
+
+If using Vercel:
+1. Open your project.
+2. Deploy the complete project folder.
+3. Make sure index.html is in the project root.
+4. Do not upload only the HTML file.
+
+This version also contains embedded CSS inside index.html as a backup,
+so the design remains visible if the CSS folder is accidentally missed.
