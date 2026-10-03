@@ -213,51 +213,26 @@ async function initCameraStream() {
        -------------------------------------------------------------- */
 
     const config = {
-
       fps: 10,
-
-      qrbox: function(width, height) {
-
-        const minSize = Math.min(width, height);
-
-        const size = Math.max(
-          180,
-          Math.floor(minSize * 0.70)
-        );
-
-        return {
-          width: size,
-          height: size
-        };
-      },
-
-      aspectRatio: 1.0,
-
+      qrbox: { width: 250, height: 250 },
       disableFlip: false
     };
 
-
     try {
-      // Strategy: start with simple environment facingMode
+      // Strategy 1: facingMode environment (ideal for mobile back camera)
       await html5QrCodeScanner.start(
         { facingMode: 'environment' },
         config,
         function(decodedText) {
           handleScanResult(decodedText);
         },
-        function() {
-          // scanner frame tick
-        }
+        function() {}
       );
 
       showCameraStatus('🟢 Camera Active. Point at the QR Code.');
       return;
     } catch (error) {
-
-      console.warn(
-        'Back camera failed:',
-        error
-      );
+      console.warn('Back camera failed:', error);
     }
 
 

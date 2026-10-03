@@ -2,15 +2,26 @@
    COMPANY PHONE TRACKER - QR CODE GENERATOR & PRINT MANAGER
    ========================================================================== */
 
-// Render QR Matrix for PHONE-001 to PHONE-020
-export function renderQRMatrix(containerId) {
+// Render QR Matrix for Phones (Support dynamic phones list & action menu)
+export function renderQRMatrix(containerId, phones) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
   container.innerHTML = '';
 
-  for (let i = 1; i <= 20; i++) {
-    const phoneId = `PHONE-${String(i).padStart(3, '0')}`;
+  let list = phones;
+  if (!list || list.length === 0) {
+    list = [];
+    for (let i = 1; i <= 20; i++) {
+      list.push({ id: `PHONE-${String(i).padStart(3, '0')}`, is_archived: false });
+    }
+  }
+
+  // Filter out archived ones by default for active display
+  const activePhones = list.filter(p => !p.is_archived);
+
+  activePhones.forEach(p => {
+    const phoneId = p.id;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(phoneId)}`;
     
     const card = document.createElement('div');
@@ -24,13 +35,24 @@ export function renderQRMatrix(containerId) {
         <img src="${qrUrl}" alt="${phoneId}" style="width: 140px; height: 140px; display: block; margin: 0 auto; border-radius: 4px;" loading="lazy" />
       </div>
       <div class="phone-title">${phoneId}</div>
-      <button class="btn btn-sm btn-glass no-print" style="margin-top: 8px;" onclick="window.downloadSingleQR('${phoneId}', 'phone')">
-        📥 Save QR
-      </button>
+      <div style="font-size: 0.75rem; color: ${p.status === 'ISSUED' ? '#f59e0b' : '#10b981'}; font-weight: 700; margin-top: 2px;">
+        ${p.status === 'ISSUED' ? `● Issued (${p.current_employee_name || p.current_employee_id || 'Staff'})` : '● Available'}
+      </div>
+      <div class="no-print" style="margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;">
+        <button class="btn btn-sm btn-glass" onclick="window.downloadSingleQR('${phoneId}', 'phone')">
+          📥 Save
+        </button>
+        <button class="btn btn-sm btn-glass" style="color: var(--accent-cyan);" onclick="window.promptReplacePhoneQR('${phoneId}')" title="Replace this Phone QR Code">
+          🔄 Replace
+        </button>
+        <button class="btn btn-sm btn-danger" onclick="window.promptRemovePhoneQR('${phoneId}')" title="Remove Phone QR Code (Keeps history)">
+          🗑️ Remove
+        </button>
+      </div>
     `;
 
     container.appendChild(card);
-  }
+  });
 }
 
 // Render QR Matrix for Employees
@@ -68,7 +90,10 @@ export function renderEmployeeQRMatrix(containerId, employees) {
     }
   }
 
-  employees.forEach((emp) => {
+  // Filter out archived employees
+  const activeEmployees = employees.filter(e => !e.is_archived);
+
+  activeEmployees.forEach((emp) => {
     const empId = emp.employee_number;
     const empName = emp.full_name || 'Unknown';
     const dept = emp.department || 'Staff';
@@ -87,9 +112,17 @@ export function renderEmployeeQRMatrix(containerId, employees) {
       <div class="phone-title" style="font-size: 0.9rem; margin-top: 0.5rem;">${empId}</div>
       <div style="font-size: 0.78rem; color: #1e293b; font-weight: 600; margin-top: 3px;">${empName}</div>
       <div style="font-size: 0.7rem; color: #475569; margin-top: 2px;">${dept}</div>
-      <button class="btn btn-sm btn-glass no-print" style="margin-top: 8px;" onclick="window.downloadSingleQR('${empId}', 'employee')">
-        📥 Save QR
-      </button>
+      <div class="no-print" style="margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;">
+        <button class="btn btn-sm btn-glass" onclick="window.downloadSingleQR('${empId}', 'employee')">
+          📥 Save
+        </button>
+        <button class="btn btn-sm btn-glass" style="color: var(--accent-cyan);" onclick="window.promptReplaceEmployeeQR('${empId}')" title="Replace Employee QR Code">
+          🔄 Replace
+        </button>
+        <button class="btn btn-sm btn-danger" onclick="window.promptRemoveEmployeeQR('${empId}')" title="Remove Employee QR Code (Keeps history)">
+          🗑️ Remove
+        </button>
+      </div>
     `;
 
     container.appendChild(card);

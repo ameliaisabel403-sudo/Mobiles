@@ -14,6 +14,7 @@ CREATE TABLE employees (
     full_name VARCHAR(100) NOT NULL,
     department VARCHAR(100) DEFAULT 'Operations',
     phone_number VARCHAR(20),
+    is_archived BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -26,6 +27,7 @@ CREATE TABLE phones (
     last_issue_time TIMESTAMPTZ,
     last_return_time TIMESTAMPTZ,
     condition VARCHAR(20) NOT NULL DEFAULT 'Good' CHECK (condition IN ('Good', 'Damaged')),
+    is_archived BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -34,8 +36,8 @@ CREATE TABLE phones (
 CREATE TABLE transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    action VARCHAR(20) NOT NULL CHECK (action IN ('ISSUE', 'RETURN')),
-    phone_id VARCHAR(50) NOT NULL REFERENCES phones(id) ON DELETE CASCADE,
+    action VARCHAR(50) NOT NULL,
+    phone_id VARCHAR(50) NOT NULL,
     employee_number VARCHAR(50) NOT NULL,
     employee_name VARCHAR(100) NOT NULL,
     condition VARCHAR(20) CHECK (condition IN ('Good', 'Damaged')),

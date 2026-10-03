@@ -279,7 +279,11 @@ function initDemoDatabase() {
 }
 
 export function getDemoDB() {
-  const data = localStorage.getItem(DEMO_DB_STORAGE_KEY);
+  let data = localStorage.getItem(DEMO_DB_STORAGE_KEY);
+  if (!data) {
+    initDemoDatabase();
+    data = localStorage.getItem(DEMO_DB_STORAGE_KEY);
+  }
   return data ? JSON.parse(data) : { phones: [], employees: [], transactions: [] };
 }
 

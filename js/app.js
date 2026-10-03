@@ -4,7 +4,20 @@
 
 import { initSupabaseClient, appConfig, saveSupabaseConfig, supabaseClient } from './config.js';
 import { initAuth, loginStaff, logoutStaff, getCurrentStaff, isAuthenticated } from './auth.js';
-import { fetchAllPhones, fetchTransactions, fetchEmployeeByNumber, fetchAllEmployees, issuePhone, returnPhone } from './database.js';
+import { 
+  fetchAllPhones, 
+  fetchTransactions, 
+  fetchEmployeeByNumber, 
+  fetchAllEmployees, 
+  issuePhone, 
+  returnPhone,
+  addNewPhoneQR,
+  removePhoneQR,
+  replacePhoneQR,
+  addNewEmployeeQR,
+  removeEmployeeQR,
+  replaceEmployeeQR
+} from './database.js';
 import { openScannerModal, closeScannerModal, parsePhoneIdFromQR } from './scanner.js';
 import { renderQRMatrix, renderEmployeeQRMatrix } from './qr-generator.js';
 import { filterTransactions, exportToCSV } from './reports.js';
@@ -38,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 6. Pre-render QR Code Sheets so they are instantly visible without delay
   try {
-    renderQRMatrix('qr-matrix-container');
+    renderQRMatrix('qr-matrix-container', cachedPhones);
     renderEmployeeQRMatrix('employee-qr-matrix-container', cachedEmployees);
   } catch (qrInitErr) {
     console.warn('QR pre-render:', qrInitErr);
@@ -267,7 +280,7 @@ export function switchView(viewId) {
   if (activeBtn) activeBtn.classList.add('active');
 
   if (viewId === 'qr-print') {
-    renderQRMatrix('qr-matrix-container');
+    renderQRMatrix('qr-matrix-container', cachedPhones);
   }
 
   if (viewId === 'employee-qr-print') {
@@ -277,7 +290,7 @@ export function switchView(viewId) {
 window.switchView = switchView;
 window._onSwitchView = function(viewId) {
   if (viewId === 'qr-print') {
-    renderQRMatrix('qr-matrix-container');
+    renderQRMatrix('qr-matrix-container', cachedPhones);
   }
   if (viewId === 'employee-qr-print') {
     renderEmployeeQRMatrix('employee-qr-matrix-container', cachedEmployees);
@@ -644,6 +657,430 @@ function openConfirmModal(type, data) {
 window.closeConfirmModal = function() {
   const modal = document.getElementById('confirm-modal');
   if (modal) modal.classList.remove('active');
+};
+
+// ==========================================================================
+// PHONE QR CODE ACTIONS: ADD, REMOVE, REPLACE
+// ==========================================================================
+
+// 1. Add New Phone QR Code Modal / Action
+window.promptAddNewPhoneQR = function() {
+  const modal = document.getElementById('confirm-modal');
+  const body = document.getElementById('confirm-modal-body');
+  if (!modal || !body) return;
+
+  // Auto suggest next phone ID
+  let nextNum = 21;
+  const numbers = cachedPhones.map(p => {
+    const m = p.id.match(/\d+/);
+    return m ? parseInt(m[0], 10) : 0;
+  });
+  if (numbers.length > 0) {
+    nextNum = Math.max(...numbers) + 1;
+  }
+  const suggestedId = `PHONE-${String(nextNum).padStart(3, '0')}`;
+
+  body.innerHTML = `
+    <div style="text-align: center; margin-bottom: 1.25rem;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📱➕</div>
+      <h3 style="font-size: 1.3rem;">Add New Phone QR Code</h3>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
+        Register a new mobile device with its unique QR tracking identity.
+      </p>
+    </div>
+    <form id="form-add-phone-qr" onsubmit="event.preventDefault(); window._submitAddNewPhoneQR();">
+      <div class="form-group">
+        <label class="form-label">Phone QR Code ID</label>
+        <input type="text" id="new-phone-id-input" class="form-input" value="${suggestedId}" placeholder="e.g. PHONE-021" required style="font-family: var(--font-mono); font-weight: 700; text-transform: uppercase;" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Initial Condition</label>
+        <select id="new-phone-condition-select" class="form-select">
+          <option value="Good" selected>Good (Brand New / Working)</option>
+          <option value="Damaged">Damaged</option>
+        </select>
+      </div>
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-glass" onclick="window.closeConfirmModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">➕ Add Phone QR Code</button>
+      </div>
+    </form>
+  `;
+
+  modal.classList.add('active');
+};
+
+window._submitAddNewPhoneQR = async function() {
+  const input = document.getElementById('new-phone-id-input');
+  const condSelect = document.getElementById('new-phone-condition-select');
+  if (!input) return;
+
+  const phoneId = input.value.trim().toUpperCase();
+  const condition = condSelect ? condSelect.value : 'Good';
+
+  try {
+    showLoader(true);
+    await addNewPhoneQR({ phoneId, condition });
+    showToast(`✅ Phone QR Code "${phoneId}" successfully added!`, 'success');
+    window.closeConfirmModal();
+    await refreshDashboardData();
+    renderQRMatrix('qr-matrix-container', cachedPhones);
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    showLoader(false);
+  }
+};
+
+// 2. Remove Previous Phone QR Code (Archives & retains full transaction logs)
+window.promptRemovePhoneQR = function(targetPhoneId = '') {
+  const modal = document.getElementById('confirm-modal');
+  const body = document.getElementById('confirm-modal-body');
+  if (!modal || !body) return;
+
+  const activePhones = cachedPhones.filter(p => !p.is_archived);
+  const optionsHtml = activePhones.map(p => `
+    <option value="${p.id}" ${p.id === targetPhoneId ? 'selected' : ''}>
+      ${p.id} ${p.status === 'ISSUED' ? `(Currently with ${p.current_employee_name || p.current_employee_id})` : '(Available)'}
+    </option>
+  `).join('');
+
+  body.innerHTML = `
+    <div style="text-align: center; margin-bottom: 1.25rem;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🗑️📱</div>
+      <h3 style="font-size: 1.3rem;">Remove Previous Phone QR Code</h3>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
+        The device will be removed from active pool. <strong>All past history and logs will be safely kept.</strong>
+      </p>
+    </div>
+    <form id="form-remove-phone-qr" onsubmit="event.preventDefault(); window._submitRemovePhoneQR();">
+      <div class="form-group">
+        <label class="form-label">Select Phone QR Code to Remove</label>
+        <select id="remove-phone-select" class="form-select" required>
+          <option value="">-- Choose Phone QR --</option>
+          ${optionsHtml}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reason for Removal</label>
+        <input type="text" id="remove-phone-reason" class="form-input" placeholder="e.g. Broken screen / Decommissioned / Lost" required />
+      </div>
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-glass" onclick="window.closeConfirmModal()">Cancel</button>
+        <button type="submit" class="btn btn-danger">🗑️ Remove Phone QR Code</button>
+      </div>
+    </form>
+  `;
+
+  modal.classList.add('active');
+};
+
+window._submitRemovePhoneQR = async function() {
+  const select = document.getElementById('remove-phone-select');
+  const reasonInput = document.getElementById('remove-phone-reason');
+  if (!select) return;
+
+  const phoneId = select.value.trim().toUpperCase();
+  const reason = reasonInput ? reasonInput.value.trim() : 'Decommissioned';
+
+  try {
+    showLoader(true);
+    await removePhoneQR(phoneId, reason);
+    showToast(`✅ Previous Phone QR "${phoneId}" removed! (History preserved)`, 'success');
+    window.closeConfirmModal();
+    await refreshDashboardData();
+    renderQRMatrix('qr-matrix-container', cachedPhones);
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    showLoader(false);
+  }
+};
+
+// 3. Replace Phone QR Code (Archives previous phone, creates/issues replacement, preserves history)
+window.promptReplacePhoneQR = function(targetPhoneId = '') {
+  const modal = document.getElementById('confirm-modal');
+  const body = document.getElementById('confirm-modal-body');
+  if (!modal || !body) return;
+
+  const activePhones = cachedPhones.filter(p => !p.is_archived);
+  const optionsHtml = activePhones.map(p => `
+    <option value="${p.id}" ${p.id === targetPhoneId ? 'selected' : ''}>
+      ${p.id} ${p.status === 'ISSUED' ? `(Issued to ${p.current_employee_name || p.current_employee_id})` : '(Available)'}
+    </option>
+  `).join('');
+
+  body.innerHTML = `
+    <div style="text-align: center; margin-bottom: 1.25rem;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔄📱</div>
+      <h3 style="font-size: 1.3rem;">Replace Phone QR Code</h3>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
+        Assign a replacement phone QR. If the previous mobile was with an employee, it will seamlessly transfer.
+      </p>
+    </div>
+    <form id="form-replace-phone-qr" onsubmit="event.preventDefault(); window._submitReplacePhoneQR();">
+      <div class="form-group">
+        <label class="form-label">Previous Phone QR Code (Old)</label>
+        <select id="replace-prev-phone-select" class="form-select" required>
+          <option value="">-- Choose Previous Phone QR --</option>
+          ${optionsHtml}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">New Phone QR Code (Replacement)</label>
+        <input type="text" id="replace-new-phone-input" class="form-input" placeholder="e.g. PHONE-021" style="font-family: var(--font-mono); font-weight: 700; text-transform: uppercase;" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Replacement Reason</label>
+        <input type="text" id="replace-phone-reason" class="form-input" placeholder="e.g. Battery defect / Hardware upgrade" />
+      </div>
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-glass" onclick="window.closeConfirmModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">🔄 Replace Phone QR Code</button>
+      </div>
+    </form>
+  `;
+
+  modal.classList.add('active');
+};
+
+window._submitReplacePhoneQR = async function() {
+  const prevSelect = document.getElementById('replace-prev-phone-select');
+  const newInput = document.getElementById('replace-new-phone-input');
+  const reasonInput = document.getElementById('replace-phone-reason');
+
+  if (!prevSelect || !newInput) return;
+
+  const previousPhoneId = prevSelect.value.trim().toUpperCase();
+  const newPhoneId = newInput.value.trim().toUpperCase();
+  const reason = reasonInput ? reasonInput.value.trim() : 'Device replacement';
+
+  try {
+    showLoader(true);
+    const res = await replacePhoneQR({ previousPhoneId, newPhoneId, reason });
+    showToast(`✅ Successfully replaced ${res.previousPhoneId} ➔ ${res.newPhoneId}!`, 'success');
+    window.closeConfirmModal();
+    await refreshDashboardData();
+    renderQRMatrix('qr-matrix-container', cachedPhones);
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    showLoader(false);
+  }
+};
+
+// ==========================================================================
+// EMPLOYEE QR CODE ACTIONS: ADD, REMOVE, REPLACE
+// ==========================================================================
+
+// 1. Add New Employee QR Code
+window.promptAddNewEmployeeQR = function() {
+  const modal = document.getElementById('confirm-modal');
+  const body = document.getElementById('confirm-modal-body');
+  if (!modal || !body) return;
+
+  // Suggest next employee number
+  let nextNum = 1011;
+  const numbers = cachedEmployees.map(e => {
+    const m = e.employee_number.match(/\d+/);
+    return m ? parseInt(m[0], 10) : 0;
+  });
+  if (numbers.length > 0) {
+    nextNum = Math.max(...numbers) + 1;
+  }
+  const suggestedEmp = `EMP-${nextNum}`;
+
+  body.innerHTML = `
+    <div style="text-align: center; margin-bottom: 1.25rem;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">👤➕</div>
+      <h3 style="font-size: 1.3rem;">Add New Employee QR Code</h3>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
+        Register a new staff member with a printable QR badge.
+      </p>
+    </div>
+    <form id="form-add-emp-qr" onsubmit="event.preventDefault(); window._submitAddNewEmployeeQR();">
+      <div class="form-group">
+        <label class="form-label">Employee Number</label>
+        <input type="text" id="new-emp-num-input" class="form-input" value="${suggestedEmp}" placeholder="e.g. EMP-1011" style="font-family: var(--font-mono); font-weight: 700; text-transform: uppercase;" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" id="new-emp-name-input" class="form-input" placeholder="e.g. John Doe" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Department</label>
+        <input type="text" id="new-emp-dept-input" class="form-input" value="Operations" placeholder="e.g. Logistics / Front Office" />
+      </div>
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-glass" onclick="window.closeConfirmModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">➕ Add Employee QR Code</button>
+      </div>
+    </form>
+  `;
+
+  modal.classList.add('active');
+};
+
+window._submitAddNewEmployeeQR = async function() {
+  const numInput = document.getElementById('new-emp-num-input');
+  const nameInput = document.getElementById('new-emp-name-input');
+  const deptInput = document.getElementById('new-emp-dept-input');
+
+  if (!numInput || !nameInput) return;
+
+  const employeeNumber = numInput.value.trim().toUpperCase();
+  const fullName = nameInput.value.trim();
+  const department = deptInput ? deptInput.value.trim() : 'Operations';
+
+  try {
+    showLoader(true);
+    await addNewEmployeeQR({ employeeNumber, fullName, department });
+    showToast(`✅ Employee QR Code "${employeeNumber}" (${fullName}) created!`, 'success');
+    window.closeConfirmModal();
+    await refreshDashboardData();
+    renderEmployeeQRMatrix('employee-qr-matrix-container', cachedEmployees);
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    showLoader(false);
+  }
+};
+
+// 2. Remove Previous Employee QR Code (Preserves all shift history)
+window.promptRemoveEmployeeQR = function(targetEmpNum = '') {
+  const modal = document.getElementById('confirm-modal');
+  const body = document.getElementById('confirm-modal-body');
+  if (!modal || !body) return;
+
+  const activeEmployees = cachedEmployees.filter(e => !e.is_archived);
+  const optionsHtml = activeEmployees.map(e => `
+    <option value="${e.employee_number}" ${e.employee_number === targetEmpNum ? 'selected' : ''}>
+      ${e.employee_number} - ${e.full_name} (${e.department || 'Staff'})
+    </option>
+  `).join('');
+
+  body.innerHTML = `
+    <div style="text-align: center; margin-bottom: 1.25rem;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🗑️👤</div>
+      <h3 style="font-size: 1.3rem;">Remove Previous Employee QR Code</h3>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
+        The employee QR code will be archived. <strong>All historical phone tracking logs are kept intact.</strong>
+      </p>
+    </div>
+    <form id="form-remove-emp-qr" onsubmit="event.preventDefault(); window._submitRemoveEmployeeQR();">
+      <div class="form-group">
+        <label class="form-label">Select Employee QR Code to Remove</label>
+        <select id="remove-emp-select" class="form-select" required>
+          <option value="">-- Choose Employee QR --</option>
+          ${optionsHtml}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reason for Removal</label>
+        <input type="text" id="remove-emp-reason" class="form-input" placeholder="e.g. Resigned / Role Transfer" required />
+      </div>
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-glass" onclick="window.closeConfirmModal()">Cancel</button>
+        <button type="submit" class="btn btn-danger">🗑️ Remove Employee QR Code</button>
+      </div>
+    </form>
+  `;
+
+  modal.classList.add('active');
+};
+
+window._submitRemoveEmployeeQR = async function() {
+  const select = document.getElementById('remove-emp-select');
+  const reasonInput = document.getElementById('remove-emp-reason');
+  if (!select) return;
+
+  const employeeNumber = select.value.trim().toUpperCase();
+  const reason = reasonInput ? reasonInput.value.trim() : 'Former Employee';
+
+  try {
+    showLoader(true);
+    await removeEmployeeQR(employeeNumber, reason);
+    showToast(`✅ Employee QR Code "${employeeNumber}" archived! (History preserved)`, 'success');
+    window.closeConfirmModal();
+    await refreshDashboardData();
+    renderEmployeeQRMatrix('employee-qr-matrix-container', cachedEmployees);
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    showLoader(false);
+  }
+};
+
+// 3. Replace Employee QR Code
+window.promptReplaceEmployeeQR = function(targetEmpNum = '') {
+  const modal = document.getElementById('confirm-modal');
+  const body = document.getElementById('confirm-modal-body');
+  if (!modal || !body) return;
+
+  const activeEmployees = cachedEmployees.filter(e => !e.is_archived);
+  const optionsHtml = activeEmployees.map(e => `
+    <option value="${e.employee_number}" ${e.employee_number === targetEmpNum ? 'selected' : ''}>
+      ${e.employee_number} - ${e.full_name}
+    </option>
+  `).join('');
+
+  body.innerHTML = `
+    <div style="text-align: center; margin-bottom: 1.25rem;">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔄👤</div>
+      <h3 style="font-size: 1.3rem;">Replace Employee QR Code</h3>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
+        Issue a replacement QR badge for a staff member (e.g., lost card or updated badge ID).
+      </p>
+    </div>
+    <form id="form-replace-emp-qr" onsubmit="event.preventDefault(); window._submitReplaceEmployeeQR();">
+      <div class="form-group">
+        <label class="form-label">Previous Employee Number (Old)</label>
+        <select id="replace-prev-emp-select" class="form-select" required>
+          <option value="">-- Choose Previous Employee --</option>
+          ${optionsHtml}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">New Employee Number (Replacement)</label>
+        <input type="text" id="replace-new-emp-input" class="form-input" placeholder="e.g. EMP-1011" style="font-family: var(--font-mono); font-weight: 700; text-transform: uppercase;" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" id="replace-new-emp-name" class="form-input" placeholder="Keep current or enter updated name" />
+      </div>
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-glass" onclick="window.closeConfirmModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">🔄 Replace Employee QR Code</button>
+      </div>
+    </form>
+  `;
+
+  modal.classList.add('active');
+};
+
+window._submitReplaceEmployeeQR = async function() {
+  const prevSelect = document.getElementById('replace-prev-emp-select');
+  const newInput = document.getElementById('replace-new-emp-input');
+  const nameInput = document.getElementById('replace-new-emp-name');
+
+  if (!prevSelect || !newInput) return;
+
+  const previousEmployeeNumber = prevSelect.value.trim().toUpperCase();
+  const newEmployeeNumber = newInput.value.trim().toUpperCase();
+  const newFullName = nameInput ? nameInput.value.trim() : '';
+
+  try {
+    showLoader(true);
+    const res = await replaceEmployeeQR({ previousEmployeeNumber, newEmployeeNumber, newFullName });
+    showToast(`✅ Successfully replaced ${res.previousEmployeeNumber} ➔ ${res.newEmployeeNumber} (${res.name})!`, 'success');
+    window.closeConfirmModal();
+    await refreshDashboardData();
+    renderEmployeeQRMatrix('employee-qr-matrix-container', cachedEmployees);
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    showLoader(false);
+  }
 };
 
 // Global Quick Return Helper from Dashboard Table

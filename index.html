@@ -157,8 +157,8 @@
           <li><button class="nav-btn" data-view="return" onclick="window.switchView('return')">📥 Return Phone</button></li>
           <li><button class="nav-btn" data-view="status-table" onclick="window.switchView('status-table')">📋 Phone Status</button></li>
           <li><button class="nav-btn" data-view="reports" onclick="window.switchView('reports')">📑 Reports</button></li>
-          <li><button class="nav-btn" data-view="qr-print" onclick="window.switchView('qr-print')">🏷️ Phone QR Labels</button></li>
-          <li><button class="nav-btn" data-view="employee-qr-print" onclick="window.switchView('employee-qr-print')">👤 Employee QR Labels</button></li>
+          <li><button class="nav-btn" data-view="qr-print" onclick="window.switchView('qr-print')">📱 Phone QR Code</button></li>
+          <li><button class="nav-btn" data-view="employee-qr-print" onclick="window.switchView('employee-qr-print')">👤 Employee QR Code</button></li>
         </ul>
 
         <div class="nav-user">
@@ -450,20 +450,33 @@
       </section>
 
       <!-- ===================================================================
-           VIEW 6: QR CODE GENERATOR & PRINT SHEET
+           VIEW 6: PHONE QR CODE MANAGEMENT & PRINT SHEET
            =================================================================== -->
       <section id="view-qr-print" class="view-section">
         
         <div class="card no-print" style="margin-bottom: 1.5rem;">
-          <div class="card-header">
-            <h3 class="card-title">🏷️ Printable QR Code Matrix (PHONE-001 to PHONE-020)</h3>
-            <button class="btn btn-primary" onclick="window.print()">
-              🖨️ Print All QR Labels
-            </button>
+          <div class="card-header" style="flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+              <h3 class="card-title">📱 Phone QR Code Management</h3>
+              <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.25rem;">
+                Manage active mobile QR codes. Previous device logs are always preserved in history.
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn btn-primary" onclick="window.promptAddNewPhoneQR()">
+                ➕ Add New Phone QR Code
+              </button>
+              <button class="btn btn-glass" style="border-color: var(--accent-cyan); color: var(--accent-cyan);" onclick="window.promptReplacePhoneQR()">
+                🔄 Replace Phone QR Code
+              </button>
+              <button class="btn btn-danger" onclick="window.promptRemovePhoneQR()">
+                🗑️ Remove Previous Phone QR Code
+              </button>
+              <button class="btn btn-glass" onclick="window.print()">
+                🖨️ Print All
+              </button>
+            </div>
           </div>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">
-            Print these QR tags on sticker paper and affix them to the back of each company Android device. Scanning any QR tag with the built-in camera scanner will automatically identify the phone ID.
-          </p>
         </div>
 
         <div id="qr-matrix-container" class="qr-grid">
@@ -473,20 +486,33 @@
       </section>
 
       <!-- ===================================================================
-           VIEW 7: EMPLOYEE QR CODE LABELS
+           VIEW 7: EMPLOYEE QR CODE MANAGEMENT
            =================================================================== -->
       <section id="view-employee-qr-print" class="view-section">
 
         <div class="card no-print" style="margin-bottom: 1.5rem;">
-          <div class="card-header">
-            <h3 class="card-title">👤 Employee QR Code Labels</h3>
-            <button class="btn btn-primary" onclick="window.print()">
-              🖨️ Print All Employee Labels
-            </button>
+          <div class="card-header" style="flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+              <h3 class="card-title">👤 Employee QR Code Management</h3>
+              <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.25rem;">
+                Manage staff identification badges. Scan directly during issuance. Historical shifts remain saved.
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn btn-primary" onclick="window.promptAddNewEmployeeQR()">
+                ➕ Add New Employee QR Code
+              </button>
+              <button class="btn btn-glass" style="border-color: var(--accent-cyan); color: var(--accent-cyan);" onclick="window.promptReplaceEmployeeQR()">
+                🔄 Replace Employee QR Code
+              </button>
+              <button class="btn btn-danger" onclick="window.promptRemoveEmployeeQR()">
+                🗑️ Remove Previous Employee QR Code
+              </button>
+              <button class="btn btn-glass" onclick="window.print()">
+                🖨️ Print All
+              </button>
+            </div>
           </div>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">
-            Print these employee ID cards and give each employee their QR badge. During phone issuance, scan an employee's QR card instead of typing their Employee Number manually!
-          </p>
         </div>
 
         <div id="employee-qr-matrix-container" class="qr-grid">
