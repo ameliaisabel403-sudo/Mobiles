@@ -232,60 +232,36 @@ async function initCameraStream() {
       showCameraStatus('🟢 Camera Active. Point at the QR Code.');
       return;
     } catch (error) {
-      console.warn('Back camera failed:', error);
+      console.warn('Back camera failed, trying getCameras fallback:', error);
     }
-
 
     /* --------------------------------------------------------------
        TRY CAMERA LIST
        -------------------------------------------------------------- */
 
     try {
-
-      const cameras =
-        await window.Html5Qrcode.getCameras();
+      const cameras = await window.Html5Qrcode.getCameras();
 
       if (cameras && cameras.length > 0) {
-
         const backCamera =
           cameras.find(camera =>
-            /back|rear|environment|world/i.test(
-              camera.label || ''
-            )
+            /back|rear|environment|world/i.test(camera.label || '')
           ) || cameras[0];
 
-
         await html5QrCodeScanner.start(
-
           backCamera.id,
-
           config,
-
           function(decodedText) {
-
             handleScanResult(decodedText);
-
           },
-
-          function(errorMessage) {
-            // QR not detected
-          }
-
+          function() {}
         );
 
-        showCameraStatus(
-          '🟢 Camera Active. Align the QR code.'
-        );
-
+        showCameraStatus('🟢 Camera Active. Align the QR code.');
         return;
       }
-
     } catch (error) {
-
-      console.warn(
-        'Camera list failed:',
-        error
-      );
+      console.warn('Camera enumeration error:', error);
     }
 
 

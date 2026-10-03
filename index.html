@@ -130,6 +130,11 @@
         });
       }
     };
+
+    window.closeConfirmModal = function() {
+      var modal = document.getElementById('confirm-modal');
+      if (modal) modal.classList.remove('active');
+    };
   </script>
 </head>
 <body>

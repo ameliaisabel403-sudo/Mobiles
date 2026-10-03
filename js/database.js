@@ -185,8 +185,8 @@ export async function issuePhone({ phoneId, employeeNumber, employeeName }) {
 
     if (txErr) console.error('Transaction log insertion note:', txErr.message);
 
-  } else {
-    // Demo Mode Local DB Execution
+  // Update local storage cache mirror so the UI updates instantly
+  try {
     const db = getDemoDB();
     const phoneIdx = db.phones.findIndex(p => p.id.toUpperCase() === cleanPhoneId);
     if (phoneIdx !== -1) {
@@ -196,7 +196,6 @@ export async function issuePhone({ phoneId, employeeNumber, employeeName }) {
       db.phones[phoneIdx].last_issue_time = now;
       db.phones[phoneIdx].updated_at = now;
     }
-
     db.transactions.unshift({
       id: 'tx-' + Date.now(),
       timestamp: now,
@@ -207,9 +206,8 @@ export async function issuePhone({ phoneId, employeeNumber, employeeName }) {
       condition: phone ? phone.condition : 'Good',
       staff_email: staffEmail
     });
-
     saveDemoDB(db);
-  }
+  } catch (e) {}
 
   return {
     phoneId: cleanPhoneId,

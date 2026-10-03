@@ -26,25 +26,25 @@ let cachedPhones = [];
 let cachedTransactions = [];
 let cachedEmployees = [];
 
-// Initialize Application on DOM Ready
-document.addEventListener('DOMContentLoaded', async () => {
+// Initialize Application
+async function initApp() {
   // 1. Initialize Supabase Client
   initSupabaseClient();
   updateConfigStatusUI();
 
-  // 2. Initialize Auth & Session Listener
+  // 2. Setup Navigation, Forms, Buttons, and Modals immediately so all buttons work without delay
+  setupNavigation();
+  setupFormsAndModals();
+  setupSettingsPanel();
+
+  // 3. Initialize Auth & Session Listener
   await initAuth((user) => {
     updateAuthUI(user);
     refreshDashboardData();
   });
 
-  // 3. Setup Realtime Sync
+  // 4. Setup Realtime Sync
   setupRealtimeSync();
-
-  // 4. Register Navigation & Form Listeners
-  setupNavigation();
-  setupFormsAndModals();
-  setupSettingsPanel();
 
   // 5. Load Initial Data
   await refreshDashboardData();
@@ -56,7 +56,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (qrInitErr) {
     console.warn('QR pre-render:', qrInitErr);
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
 // Setup Supabase Realtime Subscriptions + Auto Polling Fallback
 function setupRealtimeSync() {
