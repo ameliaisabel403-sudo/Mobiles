@@ -590,19 +590,19 @@
         <button id="btn-close-settings" class="btn btn-sm btn-glass" onclick="window.closeSettingsModal && window.closeSettingsModal()">✕</button>
       </div>
 
-      <form id="form-settings" style="margin-top: 1rem;" onsubmit="event.preventDefault(); var u=(document.getElementById('setting-supabase-url').value||'').trim(); var k=(document.getElementById('setting-supabase-key').value||'').trim(); if(u&&k){localStorage.setItem('SUPABASE_URL',u);localStorage.setItem('SUPABASE_ANON_KEY',k);alert('✅ Supabase credentials saved! Connecting to Live Database...');window.location.reload();}else{alert('Please enter both Supabase URL and Key');}">
+      <form id="form-settings" style="margin-top: 1rem;" onsubmit="event.preventDefault(); var u=(document.getElementById('setting-supabase-url').value||'').trim(); var k=(document.getElementById('setting-supabase-key').value||'').trim(); if(u&&k){localStorage.setItem('SUPABASE_URL',u);localStorage.setItem('SUPABASE_ANON_KEY',k);localStorage.setItem('supabase_url',u);localStorage.setItem('supabase_key',k);alert('✅ Supabase credentials saved! Connecting to Live Database...');window.location.reload();}else{alert('Please enter both Supabase URL and Key');}">
         <div class="form-group">
           <label class="form-label">Supabase Project URL</label>
-          <input type="url" id="setting-supabase-url" class="form-input" placeholder="https://xyzcompany.supabase.co" required />
+          <input type="url" id="setting-supabase-url" class="form-input" placeholder="https://twhbircmblqiqkfjyegs.supabase.co" value="https://twhbircmblqiqkfjyegs.supabase.co" required />
         </div>
 
         <div class="form-group">
           <label class="form-label">Supabase Public Anon Key</label>
-          <input type="password" id="setting-supabase-key" class="form-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." required />
+          <input type="password" id="setting-supabase-key" class="form-input" placeholder="sb_publishable_jvV4AD9LXR3B10LIBOe9sw_P1aDMFAq" value="sb_publishable_jvV4AD9LXR3B10LIBOe9sw_P1aDMFAq" required />
         </div>
 
         <p style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 1.25rem;">
-          🔒 Once saved, the badge in the top right will turn <strong>🟢 SUPABASE LIVE</strong> and sync with all devices.
+          🔒 Connected to <strong>🟢 SUPABASE LIVE</strong> (`twhbircmblqiqkfjyegs`). All changes sync in realtime.
         </p>
 
         <div style="display: flex; gap: 1rem; justify-content: flex-end;">
