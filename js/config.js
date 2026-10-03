@@ -3,7 +3,8 @@
    ========================================================================== */
 
 const CONFIG_STORAGE_KEY = 'company_phone_tracker_config_v1';
-const DEMO_DB_STORAGE_KEY = 'company_phone_tracker_demo_db_v1';
+const DEMO_DB_STORAGE_KEY = 'company_phone_tracker_demo_db_v2';
+
 
 // Default Supabase Config State
 export let appConfig = {
@@ -94,7 +95,149 @@ function initDemoDatabase() {
       { employee_number: 'EMP-1010', full_name: 'Lisa Anderson', department: 'Site Inspection' }
     ];
 
-    const initialTransactions = [];
+    // Generate at least 3 days of transaction history
+    const now = new Date();
+    const day1 = new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000);
+    const day2 = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+    const day3 = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+
+    const initialTransactions = [
+      // Day 3 ago
+      {
+        id: 'tx-hist-01',
+        timestamp: new Date(day3.setHours(8, 15, 0, 0)).toISOString(),
+        action: 'ISSUE',
+        phone_id: 'PHONE-001',
+        employee_number: 'EMP-1001',
+        employee_name: 'Alex Mercer',
+        condition: 'Good',
+        notes: 'Morning shift start',
+        staff_email: 'Nehan'
+      },
+      {
+        id: 'tx-hist-02',
+        timestamp: new Date(day3.setHours(17, 30, 0, 0)).toISOString(),
+        action: 'RETURN',
+        phone_id: 'PHONE-001',
+        employee_number: 'EMP-1001',
+        employee_name: 'Alex Mercer',
+        condition: 'Good',
+        notes: 'Returned end of shift',
+        staff_email: 'Nehan'
+      },
+      {
+        id: 'tx-hist-03',
+        timestamp: new Date(day3.setHours(9, 0, 0, 0)).toISOString(),
+        action: 'ISSUE',
+        phone_id: 'PHONE-002',
+        employee_number: 'EMP-1002',
+        employee_name: 'Sarah Jenkins',
+        condition: 'Good',
+        notes: 'Housekeeping shift',
+        staff_email: 'Nehan'
+      },
+      {
+        id: 'tx-hist-04',
+        timestamp: new Date(day3.setHours(18, 10, 0, 0)).toISOString(),
+        action: 'RETURN',
+        phone_id: 'PHONE-002',
+        employee_number: 'EMP-1002',
+        employee_name: 'Sarah Jenkins',
+        condition: 'Good',
+        notes: 'Completed in order',
+        staff_email: 'Nehan'
+      },
+      // Day 2 ago
+      {
+        id: 'tx-hist-05',
+        timestamp: new Date(day2.setHours(8, 30, 0, 0)).toISOString(),
+        action: 'ISSUE',
+        phone_id: 'PHONE-003',
+        employee_number: 'EMP-1003',
+        employee_name: 'Michael Chen',
+        condition: 'Good',
+        notes: 'Shift start',
+        staff_email: 'Nehan'
+      },
+      {
+        id: 'tx-hist-06',
+        timestamp: new Date(day2.setHours(17, 45, 0, 0)).toISOString(),
+        action: 'RETURN',
+        phone_id: 'PHONE-003',
+        employee_number: 'EMP-1003',
+        employee_name: 'Michael Chen',
+        condition: 'Good',
+        notes: 'Clean condition',
+        staff_email: 'Nehan'
+      },
+      {
+        id: 'tx-hist-07',
+        timestamp: new Date(day2.setHours(10, 0, 0, 0)).toISOString(),
+        action: 'ISSUE',
+        phone_id: 'PHONE-004',
+        employee_number: 'EMP-1004',
+        employee_name: 'Emily Rodriguez',
+        condition: 'Good',
+        notes: 'Floor inspection shift',
+        staff_email: 'Nehan'
+      },
+      {
+        id: 'tx-hist-08',
+        timestamp: new Date(day2.setHours(19, 20, 0, 0)).toISOString(),
+        action: 'RETURN',
+        phone_id: 'PHONE-004',
+        employee_number: 'EMP-1004',
+        employee_name: 'Emily Rodriguez',
+        condition: 'Good',
+        notes: 'All items returned',
+        staff_email: 'Nehan'
+      },
+      // Day 1 ago (Yesterday)
+      {
+        id: 'tx-hist-09',
+        timestamp: new Date(day1.setHours(8, 0, 0, 0)).toISOString(),
+        action: 'ISSUE',
+        phone_id: 'PHONE-005',
+        employee_number: 'EMP-1005',
+        employee_name: 'David Kim',
+        condition: 'Good',
+        notes: 'Maintenance shift',
+        staff_email: 'Nehan'
+      },
+      {
+        id: 'tx-hist-10',
+        timestamp: new Date(day1.setHours(17, 15, 0, 0)).toISOString(),
+        action: 'RETURN',
+        phone_id: 'PHONE-005',
+        employee_number: 'EMP-1005',
+        employee_name: 'David Kim',
+        condition: 'Good',
+        notes: 'Returned on time',
+        staff_email: 'Nehan'
+      },
+      {
+        id: 'tx-hist-11',
+        timestamp: new Date(day1.setHours(9, 30, 0, 0)).toISOString(),
+        action: 'ISSUE',
+        phone_id: 'PHONE-006',
+        employee_number: 'EMP-1006',
+        employee_name: 'Jessica Taylor',
+        condition: 'Good',
+        notes: 'Guest room inspection',
+        staff_email: 'Nehan'
+      },
+      {
+        id: 'tx-hist-12',
+        timestamp: new Date(day1.setHours(18, 0, 0, 0)).toISOString(),
+        action: 'RETURN',
+        phone_id: 'PHONE-006',
+        employee_number: 'EMP-1006',
+        employee_name: 'Jessica Taylor',
+        condition: 'Good',
+        notes: 'Normal wear, good battery',
+        staff_email: 'Nehan'
+      }
+    ];
 
     const initialDemoDB = {
       phones: defaultPhones,

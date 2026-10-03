@@ -26,13 +26,12 @@ export async function initAuth(onAuthStateChange) {
       console.error('Error fetching session:', err);
     }
   } else {
-    // In Demo Mode, check local storage session or default to logged in demo staff
+    // In Demo Mode, check local storage session or default to logged in staff Nehan
     const demoUser = localStorage.getItem('demo_auth_user');
     if (demoUser) {
       currentUser = JSON.parse(demoUser);
     } else {
-      // Default demo staff
-      currentUser = { email: 'staff@company.com', id: 'demo-staff-01' };
+      currentUser = { email: 'Nehan', id: 'nehan-staff-01' };
       localStorage.setItem('demo_auth_user', JSON.stringify(currentUser));
     }
   }

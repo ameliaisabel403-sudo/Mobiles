@@ -87,6 +87,22 @@ INSERT INTO employees (employee_number, full_name, department) VALUES
 ('EMP-1010', 'Lisa Anderson', 'Site Inspection')
 ON CONFLICT (employee_number) DO NOTHING;
 
+-- 7b. SEED AT LEAST 3 DAYS OF TRANSACTION HISTORY
+INSERT INTO transactions (id, timestamp, action, phone_id, employee_number, employee_name, condition, notes, staff_email) VALUES
+(gen_random_uuid(), NOW() - INTERVAL '3 days' + INTERVAL '8 hours', 'ISSUE', 'PHONE-001', 'EMP-1001', 'Alex Mercer', 'Good', 'Morning shift start', 'Nehan'),
+(gen_random_uuid(), NOW() - INTERVAL '3 days' + INTERVAL '17 hours 30 minutes', 'RETURN', 'PHONE-001', 'EMP-1001', 'Alex Mercer', 'Good', 'Returned end of shift', 'Nehan'),
+(gen_random_uuid(), NOW() - INTERVAL '3 days' + INTERVAL '9 hours', 'ISSUE', 'PHONE-002', 'EMP-1002', 'Sarah Jenkins', 'Good', 'Housekeeping shift', 'Nehan'),
+(gen_random_uuid(), NOW() - INTERVAL '3 days' + INTERVAL '18 hours 10 minutes', 'RETURN', 'PHONE-002', 'EMP-1002', 'Sarah Jenkins', 'Good', 'Completed shift in order', 'Nehan'),
+(gen_random_uuid(), NOW() - INTERVAL '2 days' + INTERVAL '8 hours 30 minutes', 'ISSUE', 'PHONE-003', 'EMP-1003', 'Michael Chen', 'Good', 'Shift start', 'Nehan'),
+(gen_random_uuid(), NOW() - INTERVAL '2 days' + INTERVAL '17 hours 45 minutes', 'RETURN', 'PHONE-003', 'EMP-1003', 'Michael Chen', 'Good', 'Clean condition', 'Nehan'),
+(gen_random_uuid(), NOW() - INTERVAL '2 days' + INTERVAL '10 hours', 'ISSUE', 'PHONE-004', 'EMP-1004', 'Emily Rodriguez', 'Good', 'Floor inspection shift', 'Nehan'),
+(gen_random_uuid(), NOW() - INTERVAL '2 days' + INTERVAL '19 hours 20 minutes', 'RETURN', 'PHONE-004', 'EMP-1004', 'Emily Rodriguez', 'Good', 'All accessories returned', 'Nehan'),
+(gen_random_uuid(), NOW() - INTERVAL '1 day' + INTERVAL '8 hours', 'ISSUE', 'PHONE-005', 'EMP-1005', 'David Kim', 'Good', 'Maintenance shift', 'Nehan'),
+(gen_random_uuid(), NOW() - INTERVAL '1 day' + INTERVAL '17 hours 15 minutes', 'RETURN', 'PHONE-005', 'EMP-1005', 'David Kim', 'Good', 'Returned on time', 'Nehan'),
+(gen_random_uuid(), NOW() - INTERVAL '1 day' + INTERVAL '9 hours 30 minutes', 'ISSUE', 'PHONE-006', 'EMP-1006', 'Jessica Taylor', 'Good', 'Guest room inspection', 'Nehan'),
+(gen_random_uuid(), NOW() - INTERVAL '1 day' + INTERVAL '18 hours', 'RETURN', 'PHONE-006', 'EMP-1006', 'Jessica Taylor', 'Good', 'Normal wear, good condition', 'Nehan');
+
+
 -- 8. ROW LEVEL SECURITY (RLS) POLICIES
 -- Enable RLS on all tables
 ALTER TABLE phones ENABLE ROW LEVEL SECURITY;

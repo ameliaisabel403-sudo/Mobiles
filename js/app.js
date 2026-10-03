@@ -286,19 +286,69 @@ function setupFormsAndModals() {
     });
   }
 
-  // 1b. Scan Employee QR Card Button
+  // 1b. Fully Automated Employee Card -> Phone Scan Workflow
   window.scanEmployeeCardQR = function() {
-    openScannerModal((scannedValue) => {
+    showToast('👤 Scan Employee QR Card now...', 'success');
+    openScannerModal(async (scannedEmpId) => {
+      const cleanEmpId = String(scannedEmpId).trim().toUpperCase();
       const empInput = document.getElementById('issue-emp-number');
+      const nameInput = document.getElementById('issue-emp-name');
+      
       if (empInput) {
-        empInput.value = scannedValue;
+        empInput.value = cleanEmpId;
         empInput.dispatchEvent(new Event('change', { bubbles: true }));
       }
-      fetchEmployeeByNumber(scannedValue).then(emp => {
-        const nameInput = document.getElementById('issue-emp-name');
-        if (emp && nameInput) nameInput.value = emp.full_name;
-      });
-      showToast(`Scanned Employee: ${scannedValue}`, 'success');
+
+      // Fetch employee info
+      let empName = '';
+      try {
+        const emp = await fetchEmployeeByNumber(cleanEmpId);
+        empName = emp ? emp.full_name : `Employee ${cleanEmpId}`;
+        if (nameInput) nameInput.value = empName;
+      } catch (e) {
+        empName = `Employee ${cleanEmpId}`;
+      }
+
+      showToast(`👤 Employee verified: ${empName}. Opening phone scan...`, 'success');
+
+      // Automatically launch Step 2: Mobile/Phone scan without clicking anything
+      setTimeout(() => {
+        showToast('📱 Now align Phone QR Tag in camera...', 'success');
+        openScannerModal(async (scannedPhoneRaw) => {
+          const cleanPhoneId = parsePhoneIdFromQR(scannedPhoneRaw);
+          const phoneInput = document.getElementById('issue-phone-id');
+          if (phoneInput) {
+            phoneInput.value = cleanPhoneId;
+            phoneInput.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+
+          // Check if phone is already issued
+          const existingPhone = cachedPhones.find(p => p.id === cleanPhoneId);
+          if (existingPhone && existingPhone.status === 'ISSUED') {
+            showToast(`⚠️ ${cleanPhoneId} is already issued to ${existingPhone.current_employee_name || 'another staff'}.`, 'error');
+            return;
+          }
+
+          // Automatically complete the entire issuance process!
+          try {
+            showLoader(true);
+            const res = await issuePhone({
+              phoneId: cleanPhoneId,
+              employeeNumber: cleanEmpId,
+              employeeName: empName
+            });
+            showToast(`🎉 DONE! ${res.phoneId} issued to ${res.employeeName}!`, 'success');
+            const form = document.getElementById('form-issue-phone');
+            if (form) form.reset();
+            await refreshDashboardData();
+            switchView('dashboard');
+          } catch (issueErr) {
+            showToast(issueErr.message, 'error');
+          } finally {
+            showLoader(false);
+          }
+        });
+      }, 700);
     });
   };
 
@@ -588,6 +638,10 @@ window.closeSettingsModal = function() {
   if (modalSettings) {
     modalSettings.classList.remove('active');
   }
+};
+
+window.closeScannerModal = function() {
+  closeScannerModal();
 };
 
 function setupSettingsPanel() {

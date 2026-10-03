@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Company Phone Tracking System | Android Device Management</title>
+  <title>Cinnamon Life HK Mobile | Phone Tracking System</title>
   
   <!-- SEO & Meta -->
-  <meta name="description" content="Online Company Phone Tracking System for tracking 20 company-owned Android phones, shift issuance, returns, QR code scanning, and Supabase integration." />
+  <meta name="description" content="Cinnamon Life HK Mobile - Online Phone Tracking System for company-owned Android phones, shift issuance, returns, QR scanning, and reports." />
   <meta name="theme-color" content="#090d16" />
 
   <!-- CSS Stylesheets -->
@@ -36,8 +36,8 @@
         <a href="#" class="brand" onclick="window.location.reload();">
           <div class="brand-icon">📱</div>
           <div>
-            <div>PhoneTrack</div>
-            <div style="font-size: 0.68rem; font-weight: 400; color: var(--text-dim); letter-spacing: 0.05em;">ENTERPRISE MATRIX</div>
+            <div>Cinnamon Life HK Mobile</div>
+            <div style="font-size: 0.68rem; font-weight: 400; color: var(--text-dim); letter-spacing: 0.05em;">PHONE TRACKING SYSTEM</div>
           </div>
         </a>
 
@@ -56,7 +56,7 @@
           
           <div class="user-badge">
             <div class="user-avatar">👤</div>
-            <span id="nav-user-email">staff@company.com</span>
+            <span id="nav-user-email">Nehan</span>
           </div>
 
           <button id="btn-open-settings" class="btn btn-sm btn-glass" title="Supabase Settings" onclick="window.openSettingsModal && window.openSettingsModal()">
@@ -162,12 +162,12 @@
               <label class="form-label">Employee Number / ID</label>
               <div style="display: flex; gap: 0.75rem;">
                 <input type="text" id="issue-emp-number" class="form-input" placeholder="e.g. EMP-1001" list="employee-list-options" required />
-                <button type="button" id="btn-issue-scan-emp-qr" class="btn btn-glass" style="white-space: nowrap;" onclick="window.scanEmployeeCardQR && window.scanEmployeeCardQR()">
-                  👤 Scan Card
+                <button type="button" id="btn-issue-scan-emp-qr" class="btn btn-primary" style="white-space: nowrap; font-weight: 600;" onclick="window.scanEmployeeCardQR && window.scanEmployeeCardQR()">
+                  ⚡ Scan Employee ID (Auto-Flow)
                 </button>
               </div>
               <datalist id="employee-list-options"></datalist>
-              <small style="color: var(--text-dim); display: block; margin-top: 4px;">Type Employee ID or scan their QR card badge</small>
+              <small style="color: var(--accent-cyan); display: block; margin-top: 4px;">⚡ Tapping this automatically scans Employee ID, then automatically opens Phone Scan and finishes!</small>
             </div>
 
             <div class="form-group">
@@ -390,7 +390,7 @@
     <!-- FOOTER -->
     <footer class="footer no-print">
       <div class="container">
-        Company Phone Tracking System &copy; 2026 | Supabase Powered | Enterprise Android Fleet Management
+        Cinnamon Life HK Mobile &copy; 2026 | Phone Tracking System | Staff: Nehan
       </div>
     </footer>
 
@@ -403,7 +403,7 @@
     <div class="modal-card">
       <div class="card-header" style="background: #0f172a; margin: 0; padding: 1.25rem;">
         <h3 class="card-title">📷 Align Phone QR Tag in Box</h3>
-        <button id="btn-close-scanner" class="btn btn-sm btn-glass">✕ Close</button>
+        <button id="btn-close-scanner" class="btn btn-sm btn-glass" onclick="window.closeScannerModal && window.closeScannerModal()">✕ Close</button>
       </div>
       
       <div class="scanner-viewport">
