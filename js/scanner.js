@@ -65,11 +65,14 @@ export function openScannerModal(onScanSuccess) {
     modal.classList.add('active');
   }
 
-  // Wait 250ms for modal DOM to be fully visible before starting camera
+  showCameraStatus('⌛ Requesting camera permission...');
+
+  // Start camera after slight delay to allow modal render
   setTimeout(() => {
     initCameraStream();
-  }, 250);
+  }, 150);
 }
+window.openScannerModal = openScannerModal;
 
 // ================================================================
 // CLOSE SCANNER

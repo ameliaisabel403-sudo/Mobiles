@@ -394,10 +394,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
-#qr-reader-video {
+#qr-reader {
   width: 100% !important;
+  border: none !important;
+}
+
+#qr-reader video {
+  width: 100% !important;
+  height: auto !important;
+  max-height: 380px !important;
+  object-fit: cover !important;
+  border-radius: 8px !important;
+}
+
+#qr-reader img {
+  display: none !important;
 }
 
 /* Toast Notifications */

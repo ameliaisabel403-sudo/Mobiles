@@ -27,13 +27,9 @@ export async function initAuth(onAuthStateChange) {
     }
   } else {
     // In Demo Mode, check local storage session or default to logged in staff Nehan
-    const demoUser = localStorage.getItem('demo_auth_user');
-    if (demoUser) {
-      currentUser = JSON.parse(demoUser);
-    } else {
-      currentUser = { email: 'Nehan', id: 'nehan-staff-01' };
-      localStorage.setItem('demo_auth_user', JSON.stringify(currentUser));
-    }
+    // Set logged in staff profile as Nehan
+    currentUser = { email: 'Nehan', id: 'nehan-staff-01' };
+    localStorage.setItem('demo_auth_user', JSON.stringify(currentUser));
   }
 
   if (onAuthStateChange) onAuthStateChange(currentUser);
