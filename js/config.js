@@ -18,11 +18,17 @@ export let supabaseClient = null;
 
 // Initialize Supabase Client if credentials exist
 export function initSupabaseClient() {
-  if (appConfig.supabaseUrl && appConfig.supabaseKey && window.supabase) {
+  const storedUrl = (localStorage.getItem('SUPABASE_URL') || '').trim();
+  const storedKey = (localStorage.getItem('SUPABASE_ANON_KEY') || '').trim();
+
+  appConfig.supabaseUrl = storedUrl;
+  appConfig.supabaseKey = storedKey;
+
+  if (storedUrl && storedKey && window.supabase) {
     try {
       supabaseClient = window.supabase.createClient(
-        appConfig.supabaseUrl, 
-        appConfig.supabaseKey,
+        storedUrl, 
+        storedKey,
         {
           auth: {
             persistSession: true,
@@ -32,7 +38,7 @@ export function initSupabaseClient() {
       );
       appConfig.isConfigured = true;
       appConfig.isDemoMode = false;
-      console.log('✅ Supabase Client Initialized Successfully');
+      console.log('✅ Supabase Client Initialized Successfully: 🟢 SUPABASE LIVE');
       return true;
     } catch (err) {
       console.warn('⚠️ Could not initialize Supabase Client, falling back to local demo DB:', err);

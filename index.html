@@ -590,10 +590,10 @@
         <button id="btn-close-settings" class="btn btn-sm btn-glass" onclick="window.closeSettingsModal && window.closeSettingsModal()">✕</button>
       </div>
 
-      <form id="form-settings" style="margin-top: 1rem;" onsubmit="event.preventDefault(); var u=document.getElementById('setting-supabase-url').value.trim(); var k=document.getElementById('setting-supabase-key').value.trim(); if(u&&k){localStorage.setItem('SUPABASE_URL',u);localStorage.setItem('SUPABASE_ANON_KEY',k);alert('Saved! Re-loading to connect live database...');window.location.reload();}else{alert('Please enter both Supabase URL and Key');}">
+      <form id="form-settings" style="margin-top: 1rem;" onsubmit="event.preventDefault(); var u=(document.getElementById('setting-supabase-url').value||'').trim(); var k=(document.getElementById('setting-supabase-key').value||'').trim(); if(u&&k){localStorage.setItem('SUPABASE_URL',u);localStorage.setItem('SUPABASE_ANON_KEY',k);alert('✅ Supabase credentials saved! Connecting to Live Database...');window.location.reload();}else{alert('Please enter both Supabase URL and Key');}">
         <div class="form-group">
           <label class="form-label">Supabase Project URL</label>
-          <input type="url" id="setting-supabase-url" class="form-input" placeholder="https://your-project.supabase.co" required />
+          <input type="url" id="setting-supabase-url" class="form-input" placeholder="https://xyzcompany.supabase.co" required />
         </div>
 
         <div class="form-group">
@@ -602,7 +602,7 @@
         </div>
 
         <p style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 1.25rem;">
-          🔒 Your keys are saved in your browser storage. Connecting will switch to 🟢 SUPABASE LIVE.
+          🔒 Once saved, the badge in the top right will turn <strong>🟢 SUPABASE LIVE</strong> and sync with all devices.
         </p>
 
         <div style="display: flex; gap: 1rem; justify-content: flex-end;">

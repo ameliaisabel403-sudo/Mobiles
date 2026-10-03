@@ -35,6 +35,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 5. Load Initial Data
   await refreshDashboardData();
+
+  // 6. Pre-render QR Code Sheets so they are instantly visible without delay
+  try {
+    renderQRMatrix('qr-matrix-container');
+    renderEmployeeQRMatrix('employee-qr-matrix-container', cachedEmployees);
+  } catch (qrInitErr) {
+    console.warn('QR pre-render:', qrInitErr);
+  }
 });
 
 // Setup Supabase Realtime Subscriptions + Auto Polling Fallback

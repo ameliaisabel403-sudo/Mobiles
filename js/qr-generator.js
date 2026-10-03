@@ -11,6 +11,7 @@ export function renderQRMatrix(containerId) {
 
   for (let i = 1; i <= 20; i++) {
     const phoneId = `PHONE-${String(i).padStart(3, '0')}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(phoneId)}`;
     
     const card = document.createElement('div');
     card.className = 'qr-card';
@@ -19,7 +20,9 @@ export function renderQRMatrix(containerId) {
     const canvasId = `qr-canvas-${phoneId}`;
     
     card.innerHTML = `
-      <div id="${canvasId}" class="qr-img"></div>
+      <div id="${canvasId}" class="qr-img">
+        <img src="${qrUrl}" alt="${phoneId}" style="width: 140px; height: 140px; display: block; margin: 0 auto; border-radius: 4px;" loading="lazy" />
+      </div>
       <div class="phone-title">${phoneId}</div>
       <button class="btn btn-sm btn-glass no-print" style="margin-top: 8px;" onclick="window.downloadSingleQR('${phoneId}', 'phone')">
         📥 Save QR
@@ -27,10 +30,6 @@ export function renderQRMatrix(containerId) {
     `;
 
     container.appendChild(card);
-
-    setTimeout(() => {
-      generateQRCodeCanvas(canvasId, phoneId);
-    }, 50);
   }
 }
 
@@ -69,10 +68,11 @@ export function renderEmployeeQRMatrix(containerId, employees) {
     }
   }
 
-  employees.forEach((emp, index) => {
+  employees.forEach((emp) => {
     const empId = emp.employee_number;
     const empName = emp.full_name || 'Unknown';
     const dept = emp.department || 'Staff';
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(empId)}`;
 
     const card = document.createElement('div');
     card.className = 'qr-card emp-qr-card';
@@ -81,7 +81,9 @@ export function renderEmployeeQRMatrix(containerId, employees) {
     const canvasId = `qr-emp-canvas-${empId.replace(/[^a-z0-9]/gi, '-')}`;
 
     card.innerHTML = `
-      <div id="${canvasId}" class="qr-img"></div>
+      <div id="${canvasId}" class="qr-img">
+        <img src="${qrUrl}" alt="${empId}" style="width: 140px; height: 140px; display: block; margin: 0 auto; border-radius: 4px;" loading="lazy" />
+      </div>
       <div class="phone-title" style="font-size: 0.9rem; margin-top: 0.5rem;">${empId}</div>
       <div style="font-size: 0.78rem; color: #1e293b; font-weight: 600; margin-top: 3px;">${empName}</div>
       <div style="font-size: 0.7rem; color: #475569; margin-top: 2px;">${dept}</div>
@@ -91,42 +93,7 @@ export function renderEmployeeQRMatrix(containerId, employees) {
     `;
 
     container.appendChild(card);
-
-    setTimeout(() => {
-      generateQRCodeCanvas(canvasId, empId);
-    }, index * 30);
   });
-}
-
-// Generate QR Code onto Canvas / Div
-function generateQRCodeCanvas(elementId, textPayload) {
-  const el = document.getElementById(elementId);
-  if (!el) return;
-
-  el.innerHTML = '';
-  let generated = false;
-
-  if (window.QRCode) {
-    try {
-      new window.QRCode(el, {
-        text: textPayload,
-        width: 140,
-        height: 140,
-        colorDark: "#090d16",
-        colorLight: "#ffffff",
-        correctLevel: window.QRCode.CorrectLevel.H
-      });
-      generated = true;
-    } catch (e) {
-      console.warn('Local QRCode generator error, falling back to image:', e);
-      generated = false;
-    }
-  }
-
-  if (!generated) {
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(textPayload)}`;
-    el.innerHTML = `<img src="${qrUrl}" alt="${textPayload}" style="width: 140px; height: 140px; display: block; margin: 0 auto;" />`;
-  }
 }
 
 // Expose on window for direct access across views
