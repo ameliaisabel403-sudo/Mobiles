@@ -36,30 +36,34 @@ export function initSupabaseClient() {
   appConfig.supabaseUrl = activeUrl;
   appConfig.supabaseKey = activeKey;
 
-  if (activeUrl && activeKey && window.supabase?.createClient) {
-    try {
-      supabaseClient = window.supabase.createClient(
-        activeUrl, 
-        activeKey,
-        {
-          auth: {
-            persistSession: true,
-            autoRefreshToken: true
+  if (activeUrl && activeKey) {
+    if (window.supabase?.createClient) {
+      try {
+        supabaseClient = window.supabase.createClient(
+          activeUrl, 
+          activeKey,
+          {
+            auth: {
+              persistSession: true,
+              autoRefreshToken: true
+            }
           }
-        }
-      );
-      appConfig.isConfigured = true;
-      appConfig.isDemoMode = false;
-      console.log('✅ Supabase Client Initialized Successfully: 🟢 SUPABASE LIVE (https://twhbircmblqiqkfjyegs.supabase.co)');
-      return supabaseClient;
-    } catch (err) {
-      console.warn('⚠️ Could not initialize Supabase Client, falling back to local demo DB:', err);
+        );
+        appConfig.isConfigured = true;
+        appConfig.isDemoMode = false;
+        console.log('✅ Supabase Client Initialized Successfully: 🟢 SUPABASE LIVE (https://twhbircmblqiqkfjyegs.supabase.co)');
+        return supabaseClient;
+      } catch (err) {
+        console.warn('⚠️ Supabase createClient error:', err);
+      }
+    } else {
+      console.warn('⚠️ window.supabase library not loaded yet.');
     }
   }
 
   // Fallback to local demo database mode if network completely fails
-  appConfig.isConfigured = false;
-  appConfig.isDemoMode = true;
+  appConfig.isConfigured = Boolean(activeUrl && activeKey);
+  appConfig.isDemoMode = !appConfig.isConfigured;
   initDemoDatabase();
   return null;
 }

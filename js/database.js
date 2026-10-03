@@ -2,13 +2,14 @@
    COMPANY PHONE TRACKER - DATABASE ACCESS LAYER (DAL)
    ========================================================================== */
 
-import { supabaseClient, appConfig, getDemoDB, saveDemoDB } from './config.js';
+import { getSupabase, appConfig, getDemoDB, saveDemoDB } from './config.js';
 import { getCurrentStaff } from './auth.js';
 
 // Get All Phones List
 export async function fetchAllPhones() {
-  if (appConfig.isConfigured && supabaseClient) {
-    const { data, error } = await supabaseClient
+  const client = getSupabase();
+  if (appConfig.isConfigured && client) {
+    const { data, error } = await client
       .from('phones')
       .select('*')
       .order('id', { ascending: true });
@@ -24,8 +25,9 @@ export async function fetchAllPhones() {
 // Fetch Phone By ID
 export async function fetchPhoneById(phoneId) {
   const cleanId = phoneId.trim().toUpperCase();
-  if (appConfig.isConfigured && supabaseClient) {
-    const { data, error } = await supabaseClient
+  const client = getSupabase();
+  if (appConfig.isConfigured && client) {
+    const { data, error } = await client
       .from('phones')
       .select('*')
       .eq('id', cleanId)
@@ -46,8 +48,9 @@ export async function fetchEmployeeByNumber(empNumber) {
   if (!empNumber) return null;
   const cleanNum = empNumber.trim().toUpperCase();
   
-  if (appConfig.isConfigured && supabaseClient) {
-    const { data, error } = await supabaseClient
+  const client = getSupabase();
+  if (appConfig.isConfigured && client) {
+    const { data, error } = await client
       .from('employees')
       .select('*')
       .eq('employee_number', cleanNum)
@@ -65,8 +68,9 @@ export async function fetchEmployeeByNumber(empNumber) {
 
 // Fetch All Employees List
 export async function fetchAllEmployees() {
-  if (appConfig.isConfigured && supabaseClient) {
-    const { data, error } = await supabaseClient
+  const client = getSupabase();
+  if (appConfig.isConfigured && client) {
+    const { data, error } = await client
       .from('employees')
       .select('*')
       .order('full_name', { ascending: true });
@@ -81,8 +85,9 @@ export async function fetchAllEmployees() {
 
 // Fetch Transactions Log History
 export async function fetchTransactions() {
-  if (appConfig.isConfigured && supabaseClient) {
-    const { data, error } = await supabaseClient
+  const client = getSupabase();
+  if (appConfig.isConfigured && client) {
+    const { data, error } = await client
       .from('transactions')
       .select('*')
       .order('timestamp', { ascending: false });
@@ -128,9 +133,10 @@ export async function issuePhone({ phoneId, employeeNumber, employeeName }) {
 
   const now = new Date().toISOString();
 
-  if (appConfig.isConfigured && supabaseClient) {
+  const client = getSupabase();
+  if (appConfig.isConfigured && client) {
     // Update phone record
-    const { error: updateErr } = await supabaseClient
+    const { error: updateErr } = await client
       .from('phones')
       .update({
         status: 'ISSUED',
@@ -144,7 +150,7 @@ export async function issuePhone({ phoneId, employeeNumber, employeeName }) {
     if (updateErr) throw new Error('Failed to update phone status: ' + updateErr.message);
 
     // Insert transaction log
-    const { error: txErr } = await supabaseClient
+    const { error: txErr } = await client
       .from('transactions')
       .insert({
         action: 'ISSUE',
@@ -216,9 +222,10 @@ export async function returnPhone({ phoneId, condition = 'Good', notes = '' }) {
   const assignedEmpName = phone.current_employee_name || 'Unassigned Staff';
   const now = new Date().toISOString();
 
-  if (appConfig.isConfigured && supabaseClient) {
+  const client = getSupabase();
+  if (appConfig.isConfigured && client) {
     // Update phone record to AVAILABLE
-    const { error: updateErr } = await supabaseClient
+    const { error: updateErr } = await client
       .from('phones')
       .update({
         status: 'AVAILABLE',
@@ -233,7 +240,7 @@ export async function returnPhone({ phoneId, condition = 'Good', notes = '' }) {
     if (updateErr) throw new Error('Failed to update phone return: ' + updateErr.message);
 
     // Insert transaction log
-    const { error: txErr } = await supabaseClient
+    const { error: txErr } = await client
       .from('transactions')
       .insert({
         action: 'RETURN',
