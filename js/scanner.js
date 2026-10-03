@@ -232,15 +232,8 @@ async function initCameraStream() {
        -------------------------------------------------------------- */
 
     try {
-
       await html5QrCodeScanner.start(
-
-        {
-          facingMode: {
-            exact: 'environment'
-          }
-        },
-
+        { facingMode: 'environment' },
         config,
 
         function(decodedText) {
