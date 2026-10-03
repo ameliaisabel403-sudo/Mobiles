@@ -47,7 +47,8 @@
           <li><button class="nav-btn" data-view="return">📥 Return Phone</button></li>
           <li><button class="nav-btn" data-view="status-table">📋 Phone Status</button></li>
           <li><button class="nav-btn" data-view="reports">📑 Reports</button></li>
-          <li><button class="nav-btn" data-view="qr-print">🏷️ QR Labels</button></li>
+          <li><button class="nav-btn" data-view="qr-print">🏷️ Phone QR Labels</button></li>
+          <li><button class="nav-btn" data-view="employee-qr-print">👤 Employee QR Labels</button></li>
         </ul>
 
         <div class="nav-user">
@@ -159,9 +160,14 @@
             
             <div class="form-group">
               <label class="form-label">Employee Number / ID</label>
-              <input type="text" id="issue-emp-number" class="form-input" placeholder="e.g. EMP-1001" list="employee-list-options" required />
+              <div style="display: flex; gap: 0.75rem;">
+                <input type="text" id="issue-emp-number" class="form-input" placeholder="e.g. EMP-1001" list="employee-list-options" required />
+                <button type="button" id="btn-issue-scan-emp-qr" class="btn btn-glass" style="white-space: nowrap;">
+                  👤 Scan Card
+                </button>
+              </div>
               <datalist id="employee-list-options"></datalist>
-              <small style="color: var(--text-dim); display: block; margin-top: 4px;">Select or type employee ID (e.g. EMP-1001, EMP-1002)</small>
+              <small style="color: var(--text-dim); display: block; margin-top: 4px;">Type Employee ID or scan their QR card badge</small>
             </div>
 
             <div class="form-group">
@@ -351,6 +357,29 @@
         </div>
 
         <div id="qr-matrix-container" class="qr-grid">
+          <!-- Populated via JS -->
+        </div>
+
+      </section>
+
+      <!-- ===================================================================
+           VIEW 7: EMPLOYEE QR CODE LABELS
+           =================================================================== -->
+      <section id="view-employee-qr-print" class="view-section">
+
+        <div class="card no-print" style="margin-bottom: 1.5rem;">
+          <div class="card-header">
+            <h3 class="card-title">👤 Employee QR Code Labels</h3>
+            <button class="btn btn-primary" onclick="window.print()">
+              🖨️ Print All Employee Labels
+            </button>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Print these employee ID cards and give each employee their QR badge. During phone issuance, scan an employee's QR card instead of typing their Employee Number manually!
+          </p>
+        </div>
+
+        <div id="employee-qr-matrix-container" class="qr-grid">
           <!-- Populated via JS -->
         </div>
 

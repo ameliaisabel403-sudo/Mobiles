@@ -6,7 +6,7 @@ import { initSupabaseClient, appConfig, saveSupabaseConfig } from './config.js';
 import { initAuth, loginStaff, logoutStaff, getCurrentStaff, isAuthenticated } from './auth.js';
 import { fetchAllPhones, fetchTransactions, fetchEmployeeByNumber, fetchAllEmployees, issuePhone, returnPhone } from './database.js';
 import { openScannerModal, closeScannerModal, parsePhoneIdFromQR } from './scanner.js';
-import { renderQRMatrix } from './qr-generator.js';
+import { renderQRMatrix, renderEmployeeQRMatrix } from './qr-generator.js';
 import { filterTransactions, exportToCSV } from './reports.js';
 
 let cachedPhones = [];
@@ -261,6 +261,10 @@ export function switchView(viewId) {
   if (viewId === 'qr-print') {
     renderQRMatrix('qr-matrix-container');
   }
+
+  if (viewId === 'employee-qr-print') {
+    renderEmployeeQRMatrix('employee-qr-matrix-container', cachedEmployees);
+  }
 }
 window.switchView = switchView;
 window.refreshDashboardData = refreshDashboardData;
@@ -279,6 +283,27 @@ function setupFormsAndModals() {
           nameInput.value = emp.full_name;
         }
       }
+    });
+  }
+
+  // 1b. Scan Employee QR Card Button
+  const empScanBtn = document.getElementById('btn-issue-scan-emp-qr');
+  if (empScanBtn) {
+    empScanBtn.addEventListener('click', () => {
+      openScannerModal((scannedValue) => {
+        // Employee QR payload is the employee number (e.g. EMP-1001)
+        const empInput = document.getElementById('issue-emp-number');
+        if (empInput) {
+          empInput.value = scannedValue;
+          empInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        // Auto-resolve employee name
+        fetchEmployeeByNumber(scannedValue).then(emp => {
+          const nameInput = document.getElementById('issue-emp-name');
+          if (emp && nameInput) nameInput.value = emp.full_name;
+        });
+        showToast(`Scanned Employee: ${scannedValue}`, 'success');
+      });
     });
   }
 
