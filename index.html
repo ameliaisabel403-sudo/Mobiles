@@ -162,7 +162,7 @@
               <label class="form-label">Employee Number / ID</label>
               <div style="display: flex; gap: 0.75rem;">
                 <input type="text" id="issue-emp-number" class="form-input" placeholder="e.g. EMP-1001" list="employee-list-options" required />
-                <button type="button" id="btn-issue-scan-emp-qr" class="btn btn-glass" style="white-space: nowrap;">
+                <button type="button" id="btn-issue-scan-emp-qr" class="btn btn-glass" style="white-space: nowrap;" onclick="window.scanEmployeeCardQR && window.scanEmployeeCardQR()">
                   👤 Scan Card
                 </button>
               </div>
@@ -179,7 +179,7 @@
               <label class="form-label">Phone ID (Scan QR Tag or Select)</label>
               <div style="display: flex; gap: 0.75rem;">
                 <input type="text" id="issue-phone-id" class="form-input" placeholder="e.g. PHONE-001" required />
-                <button type="button" id="btn-issue-scan-qr" class="btn btn-primary" style="white-space: nowrap;">
+                <button type="button" id="btn-issue-scan-qr" class="btn btn-primary" style="white-space: nowrap;" onclick="window.scanIssuePhoneQR && window.scanIssuePhoneQR()">
                   📷 Scan QR Code
                 </button>
               </div>
@@ -210,7 +210,7 @@
               <label class="form-label">Scan Phone QR Code (or Type ID)</label>
               <div style="display: flex; gap: 0.75rem;">
                 <input type="text" id="return-phone-id" class="form-input" placeholder="e.g. PHONE-001" required />
-                <button type="button" id="btn-return-scan-qr" class="btn btn-cyan" style="white-space: nowrap;">
+                <button type="button" id="btn-return-scan-qr" class="btn btn-cyan" style="white-space: nowrap;" onclick="window.scanReturnPhoneQR && window.scanReturnPhoneQR()">
                   📷 Scan QR Code
                 </button>
               </div>

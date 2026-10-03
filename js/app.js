@@ -287,40 +287,48 @@ function setupFormsAndModals() {
   }
 
   // 1b. Scan Employee QR Card Button
+  window.scanEmployeeCardQR = function() {
+    openScannerModal((scannedValue) => {
+      const empInput = document.getElementById('issue-emp-number');
+      if (empInput) {
+        empInput.value = scannedValue;
+        empInput.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      fetchEmployeeByNumber(scannedValue).then(emp => {
+        const nameInput = document.getElementById('issue-emp-name');
+        if (emp && nameInput) nameInput.value = emp.full_name;
+      });
+      showToast(`Scanned Employee: ${scannedValue}`, 'success');
+    });
+  };
+
   const empScanBtn = document.getElementById('btn-issue-scan-emp-qr');
   if (empScanBtn) {
-    empScanBtn.addEventListener('click', () => {
-      openScannerModal((scannedValue) => {
-        // Employee QR payload is the employee number (e.g. EMP-1001)
-        const empInput = document.getElementById('issue-emp-number');
-        if (empInput) {
-          empInput.value = scannedValue;
-          empInput.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        // Auto-resolve employee name
-        fetchEmployeeByNumber(scannedValue).then(emp => {
-          const nameInput = document.getElementById('issue-emp-name');
-          if (emp && nameInput) nameInput.value = emp.full_name;
-        });
-        showToast(`Scanned Employee: ${scannedValue}`, 'success');
-      });
+    empScanBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.scanEmployeeCardQR();
     });
   }
 
   // 2. Issue Form Scan QR Button
+  window.scanIssuePhoneQR = function() {
+    openScannerModal((scannedPhoneId) => {
+      const cleanId = parsePhoneIdFromQR(scannedPhoneId);
+      const input = document.getElementById('issue-phone-id');
+      if (input) {
+        input.value = cleanId;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      showToast(`Scanned Phone: ${cleanId}`, 'success');
+    });
+  };
+
   const issueScanBtn = document.getElementById('btn-issue-scan-qr');
   if (issueScanBtn) {
-    issueScanBtn.addEventListener('click', () => {
-      openScannerModal((scannedPhoneId) => {
-        const cleanId = parsePhoneIdFromQR(scannedPhoneId);
-        const input = document.getElementById('issue-phone-id');
-        if (input) {
-          input.value = cleanId;
-          input.dispatchEvent(new Event('change', { bubbles: true }));
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-        showToast(`Scanned Phone: ${cleanId}`, 'success');
-      });
+    issueScanBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.scanIssuePhoneQR();
     });
   }
 
@@ -355,20 +363,25 @@ function setupFormsAndModals() {
   }
 
   // 4. Return Form Scan QR Button
+  window.scanReturnPhoneQR = function() {
+    openScannerModal((scannedPhoneId) => {
+      const cleanId = parsePhoneIdFromQR(scannedPhoneId);
+      const input = document.getElementById('return-phone-id');
+      if (input) {
+        input.value = cleanId;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      handleReturnLookup(cleanId);
+      showToast(`Scanned Phone: ${cleanId}`, 'success');
+    });
+  };
+
   const returnScanBtn = document.getElementById('btn-return-scan-qr');
   if (returnScanBtn) {
-    returnScanBtn.addEventListener('click', () => {
-      openScannerModal((scannedPhoneId) => {
-        const cleanId = parsePhoneIdFromQR(scannedPhoneId);
-        const input = document.getElementById('return-phone-id');
-        if (input) {
-          input.value = cleanId;
-          input.dispatchEvent(new Event('change', { bubbles: true }));
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-        handleReturnLookup(cleanId);
-        showToast(`Scanned Phone: ${cleanId}`, 'success');
-      });
+    returnScanBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.scanReturnPhoneQR();
     });
   }
 
