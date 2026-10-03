@@ -356,7 +356,25 @@
 }
 
 /* Camera Scanner Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
 
+.modal-overlay.active {
+  display: flex !important;
+}
 
 .modal-card {
   background: #0f172a;

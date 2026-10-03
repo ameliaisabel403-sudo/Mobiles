@@ -559,23 +559,41 @@ window.quickReturnPhone = function(phoneId) {
 };
 
 // Setup Settings Modal & Supabase Credentials Config
+window.openSettingsModal = function() {
+  const modalSettings = document.getElementById('settings-modal');
+  if (modalSettings) {
+    const urlInput = document.getElementById('setting-supabase-url');
+    const keyInput = document.getElementById('setting-supabase-key');
+    if (urlInput) urlInput.value = appConfig.supabaseUrl || '';
+    if (keyInput) keyInput.value = appConfig.supabaseKey || '';
+    modalSettings.classList.add('active');
+  }
+};
+
+window.closeSettingsModal = function() {
+  const modalSettings = document.getElementById('settings-modal');
+  if (modalSettings) {
+    modalSettings.classList.remove('active');
+  }
+};
+
 function setupSettingsPanel() {
   const btnSettings = document.getElementById('btn-open-settings');
   const modalSettings = document.getElementById('settings-modal');
   const btnCloseSettings = document.getElementById('btn-close-settings');
   const formSettings = document.getElementById('form-settings');
 
-  if (btnSettings && modalSettings) {
-    btnSettings.addEventListener('click', () => {
-      document.getElementById('setting-supabase-url').value = appConfig.supabaseUrl || '';
-      document.getElementById('setting-supabase-key').value = appConfig.supabaseKey || '';
-      modalSettings.classList.add('active');
+  if (btnSettings) {
+    btnSettings.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.openSettingsModal();
     });
   }
 
   if (btnCloseSettings) {
-    btnCloseSettings.addEventListener('click', () => {
-      modalSettings.classList.remove('active');
+    btnCloseSettings.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.closeSettingsModal();
     });
   }
 

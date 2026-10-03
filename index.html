@@ -59,7 +59,7 @@
             <span id="nav-user-email">staff@company.com</span>
           </div>
 
-          <button id="btn-open-settings" class="btn btn-sm btn-glass" title="Supabase Settings">
+          <button id="btn-open-settings" class="btn btn-sm btn-glass" title="Supabase Settings" onclick="window.openSettingsModal && window.openSettingsModal()">
             ⚙️ Settings
           </button>
         </div>
@@ -463,7 +463,7 @@
     <div class="modal-card" style="padding: 1.5rem;">
       <div class="card-header" style="padding-bottom: 0.75rem;">
         <h3 class="card-title">⚙️ Supabase Credentials Configuration</h3>
-        <button id="btn-close-settings" class="btn btn-sm btn-glass">✕</button>
+        <button id="btn-close-settings" class="btn btn-sm btn-glass" onclick="window.closeSettingsModal && window.closeSettingsModal()">✕</button>
       </div>
 
       <form id="form-settings" style="margin-top: 1rem;">
