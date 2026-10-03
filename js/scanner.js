@@ -1,477 +1,152 @@
-/* ==========================================================================
-   CINNAMON LIFE HK MOBILE - CAMERA QR SCANNER
-   ========================================================================== */
+let scanner = null;
+let callback = null;
+let scanMode = "phone";
+let starting = false;
 
-let html5QrCodeScanner = null;
-let currentScanCallback = null;
-let scanLocked = false;
+export function openScannerModal(onScan, { mode = "phone", quickOptions = [] } = {}) {
+  callback = onScan;
+  scanMode = mode;
 
+  const modal = document.getElementById("scanner-modal");
+  const title = document.getElementById("scanner-modal-title");
+  const status = document.getElementById("camera-status-msg");
+  const select = document.getElementById("scanner-quick-select");
 
-/* ==========================================================================
-   PHONE QR PARSER
-   ========================================================================== */
+  if (title) title.textContent = mode === "employee" ? "👤 Scan Employee QR" : "📷 Scan Phone QR";
+  if (status) status.textContent = "Starting camera...";
 
-export function parsePhoneIdFromQR(scannedText) {
-  if (!scannedText) return '';
-
-  let str = String(scannedText).trim();
-
-  // Remove URL prefix if QR contains a URL
-  if (str.includes('/')) {
-    const parts = str.split('/').filter(p => p.length > 0);
-    str = parts[parts.length - 1] || str;
+  if (select && quickOptions.length) {
+    const isEmp = mode === "employee";
+    select.innerHTML =
+      `<option value="">-- Quick Select (No Camera Fallback) --</option>` +
+      quickOptions.map(x => {
+        const id = isEmp ? x.employee_number : x.id;
+        const label = isEmp ? `${x.employee_number} (${x.full_name || "Employee"})` : x.id;
+        return `<option value="${esc(id)}">${esc(label)}</option>`;
+      }).join("");
   }
 
-  // Convert number to PHONE-001 format
-  const digitMatch = str.match(/(\d+)/);
+  window._scannerQuickSelect = value => finish(value);
 
-  if (digitMatch && digitMatch[1]) {
-    const num = parseInt(digitMatch[1], 10);
-
-    if (num >= 1 && num <= 20) {
-      return `PHONE-${String(num).padStart(3, '0')}`;
-    }
-  }
-
-  return str.toUpperCase();
+  modal?.classList.add("active");
+  setTimeout(start, 200);
 }
 
+async function start() {
+  if (starting) return;
+  starting = true;
+  const status = document.getElementById("camera-status-msg");
 
-/* ==========================================================================
-   BEEP SOUND
-   ========================================================================== */
-
-function playBeepSound() {
-  try {
-    const AudioContext =
-      window.AudioContext || window.webkitAudioContext;
-
-    if (!AudioContext) return;
-
-    const audioCtx = new AudioContext();
-
-    const oscillator = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(
-      880,
-      audioCtx.currentTime
-    );
-
-    gain.gain.setValueAtTime(
-      0.2,
-      audioCtx.currentTime
-    );
-
-    gain.gain.exponentialRampToValueAtTime(
-      0.01,
-      audioCtx.currentTime + 0.15
-    );
-
-    oscillator.connect(gain);
-    gain.connect(audioCtx.destination);
-
-    oscillator.start();
-    oscillator.stop(audioCtx.currentTime + 0.15);
-
-  } catch (e) {
-    console.warn('Audio beep:', e);
-  }
-}
-
-
-/* ==========================================================================
-   OPEN SCANNER
-   ========================================================================== */
-
-export function openScannerModal(onScanSuccess) {
-
-  if (typeof onScanSuccess !== 'function') {
-    console.error('Scanner callback is missing.');
-    return;
-  }
-
-  scanLocked = false;
-  currentScanCallback = onScanSuccess;
-
-  const modal = document.getElementById('scanner-modal');
-
-  if (modal) {
-    modal.classList.add('active');
-  }
-
-  showCameraStatus('⌛ Requesting camera permission...');
-
-  // Give the modal time to appear before starting camera
-  setTimeout(() => {
-    initCameraStream();
-  }, 300);
-}
-
-window.openScannerModal = openScannerModal;
-
-
-/* ==========================================================================
-   CLOSE SCANNER
-   ========================================================================== */
-
-export async function closeScannerModal() {
-
-  await stopCameraStream();
-
-  const modal = document.getElementById('scanner-modal');
-
-  if (modal) {
-    modal.classList.remove('active');
-  }
-
-  currentScanCallback = null;
-  scanLocked = false;
-}
-
-window.closeScannerModal = closeScannerModal;
-window._startCameraStream = function(cb) {
-  openScannerModal(cb);
-};
-window._stopCameraStream = function() {
-  stopCameraStream();
-};
-
-
-/* ==========================================================================
-   START CAMERA
-   ========================================================================== */
-
-async function initCameraStream() {
-
-  const qrRegion = document.getElementById('qr-reader');
-
-  if (!qrRegion) {
-    console.error(
-      'QR reader container #qr-reader not found.'
-    );
-    return;
-  }
-
-  showCameraStatus('⌛ Starting camera...');
+  await stop();
 
   try {
-
-    // Stop previous scanner
-    if (html5QrCodeScanner) {
-      await stopCameraStream();
+    if (!window.isSecureContext && location.hostname !== "localhost") {
+      throw new Error("Camera requires HTTPS. Make sure you're on the Vercel HTTPS URL.");
     }
 
-    // Check QR library
     if (!window.Html5Qrcode) {
-
-      showCameraStatus(
-        '❌ QR scanner library not loaded. Please reload the page.'
-      );
-
-      return;
+      throw new Error("QR camera library not loaded. Check your internet connection.");
     }
 
-    // Check browser camera support
-    if (
-      !navigator.mediaDevices ||
-      !navigator.mediaDevices.getUserMedia
-    ) {
-
-      showCameraStatus(
-        '❌ Camera is not supported. Please use Chrome or Safari.'
-      );
-
-      return;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error("This browser doesn't support camera access.");
     }
 
-    // Check HTTPS
-    if (
-      location.protocol !== 'https:' &&
-      location.hostname !== 'localhost'
-    ) {
+    scanner = new window.Html5Qrcode("qr-reader");
 
-      showCameraStatus(
-        '❌ Camera requires HTTPS. Please open the Vercel website.'
-      );
-      return;
+    let cameras = [];
+    try {
+      cameras = await window.Html5Qrcode.getCameras();
+    } catch (e) {
+      // Permission may only be granted during start() on some mobile browsers
     }
-
-    // Clean qr-reader element before attaching
-    const container = document.getElementById('qr-reader');
-    if (container) {
-      container.innerHTML = '';
-    }
-
-    // Create scanner
-    html5QrCodeScanner = new window.Html5Qrcode('qr-reader');
-
-
-    /* --------------------------------------------------------------
-       CAMERA SETTINGS
-       -------------------------------------------------------------- */
 
     const config = {
       fps: 10,
-      qrbox: { width: 250, height: 250 },
+      qrbox: (w, h) => {
+        const size = Math.max(200, Math.floor(Math.min(w, h) * 0.75));
+        return { width: Math.min(size, w - 20), height: Math.min(size, h - 20) };
+      },
+      aspectRatio: 1.0,
       disableFlip: false
     };
 
-    try {
-      // Strategy 1: facingMode environment (ideal for mobile back camera)
-      await html5QrCodeScanner.start(
-        { facingMode: 'environment' },
-        config,
-        function(decodedText) {
-          handleScanResult(decodedText);
-        },
-        function() {}
-      );
-
-      showCameraStatus('🟢 Camera Active. Point at the QR Code.');
-      return;
-    } catch (error) {
-      console.warn('Back camera failed, trying getCameras fallback:', error);
+    if (cameras && cameras.length > 0) {
+      const cam =
+        cameras.find(c => /back|rear|environment|world/i.test(c.label)) ||
+        cameras[cameras.length - 1];
+      await scanner.start(cam.id, config, text => finish(text), () => {});
+    } else {
+      await scanner.start({ facingMode: { ideal: "environment" } }, config, text => finish(text), () => {});
     }
 
-    /* --------------------------------------------------------------
-       TRY CAMERA LIST
-       -------------------------------------------------------------- */
+    if (status) status.textContent = "🟢 Camera active. Point at the QR code.";
 
-    try {
-      const cameras = await window.Html5Qrcode.getCameras();
+  } catch (err) {
+    console.error("QR scanner error:", err);
+    let msg = err.message || "Camera could not start.";
 
-      if (cameras && cameras.length > 0) {
-        const backCamera =
-          cameras.find(camera =>
-            /back|rear|environment|world/i.test(camera.label || '')
-          ) || cameras[0];
-
-        await html5QrCodeScanner.start(
-          backCamera.id,
-          config,
-          function(decodedText) {
-            handleScanResult(decodedText);
-          },
-          function() {}
-        );
-
-        showCameraStatus('🟢 Camera Active. Align the QR code.');
-        return;
-      }
-    } catch (error) {
-      console.warn('Camera enumeration error:', error);
+    if (msg.includes("Permission") || msg.includes("NotAllowed")) {
+      msg = "Camera permission denied. Please allow camera access in your browser settings, then try again.";
+    } else if (msg.includes("NotFound") || msg.includes("DevicesNotFound")) {
+      msg = "No camera found on this device.";
+    } else if (msg.includes("NotReadable") || msg.includes("TrackStartError")) {
+      msg = "Camera is in use by another app. Close it and try again.";
     }
 
-
-    /* --------------------------------------------------------------
-       FINAL CAMERA FALLBACK
-       -------------------------------------------------------------- */
-
-    try {
-
-      await html5QrCodeScanner.start(
-
-        {
-          facingMode: 'user'
-        },
-
-        config,
-
-        function(decodedText) {
-
-          handleScanResult(decodedText);
-
-        },
-
-        function(errorMessage) {
-          // QR not detected
-        }
-
-      );
-
-      showCameraStatus(
-        '🟢 Camera Active. Align the QR code.'
-      );
-
-    } catch (error) {
-
-      console.error(
-        'All camera methods failed:',
-        error
-      );
-
-      const message =
-        String(error?.message || error || '');
-
-      if (
-        /permission|notallowed|denied/i.test(message)
-      ) {
-
-        showCameraStatus(
-          '❌ Camera permission denied. Allow camera access in browser settings.'
-        );
-
-      } else {
-
-        showCameraStatus(
-          '❌ Could not start camera. Please select the ID manually below.'
-        );
-      }
-
-      try {
-
-        if (html5QrCodeScanner) {
-          await html5QrCodeScanner.clear();
-        }
-
-      } catch (e) {}
-
-      html5QrCodeScanner = null;
+    if (status) {
+      status.textContent = `⚠️ ${msg} Use Quick Select below instead.`;
     }
+    scanner = null;
+  } finally {
+    starting = false;
   }
 }
 
+function finish(raw) {
+  if (!raw || !callback) return;
 
-/* ==========================================================================
-   STOP CAMERA
-   ========================================================================== */
+  let s = String(raw).trim();
+  if (s.includes("/")) s = s.split("/").filter(Boolean).pop();
+  s = s.toUpperCase();
 
-export async function stopCameraStream() {
-
-  if (!html5QrCodeScanner) {
-    return;
-  }
-
-  try {
-
-    await html5QrCodeScanner.stop();
-
-  } catch (error) {
-
-    console.warn(
-      'Camera stop:',
-      error
-    );
-  }
-
-
-  try {
-
-    await html5QrCodeScanner.clear();
-
-  } catch (error) {}
-
-
-  html5QrCodeScanner = null;
-}
-
-
-/* ==========================================================================
-   HANDLE SUCCESSFUL QR SCAN
-   ========================================================================== */
-
-async function handleScanResult(scannedRawValue) {
-
-  // Ignore empty results
-  if (!scannedRawValue) {
-    return;
-  }
-
-  // Prevent multiple scans
-  if (scanLocked) {
-    return;
-  }
-
-  scanLocked = true;
-
-
-  // IMPORTANT:
-  // DO NOT convert the QR into PHONE-001 here.
-  //
-  // Employee QR and Phone QR are different.
-  // app.js decides which type of QR is being scanned.
-  //
-  const rawValue =
-    String(scannedRawValue).trim();
-
-
-  // Beep
-  playBeepSound();
-
-
-  // Vibrate mobile
-  if (navigator.vibrate) {
-
-    try {
-
-      navigator.vibrate([
-        100,
-        50,
-        100
-      ]);
-
-    } catch (error) {}
-  }
-
-
-  // Save callback
-  const callback =
-    currentScanCallback;
-
-
-  // Stop camera
-  await stopCameraStream();
-
-
-  // Close modal
-  const modal =
-    document.getElementById('scanner-modal');
-
-  if (modal) {
-    modal.classList.remove('active');
-  }
-
-
-  currentScanCallback = null;
-
-
-  // Send RAW QR value back to app.js
-  if (callback) {
-
-    try {
-
-      await callback(rawValue);
-
-    } catch (error) {
-
-      console.error(
-        'QR callback error:',
-        error
-      );
+  if (scanMode === "phone") {
+    const m = s.match(/(?:PHONE[-_ ]*)?0*(\d{1,2})$/);
+    if (m && +m[1] >= 1 && +m[1] <= 20) {
+      s = `PHONE-${String(+m[1]).padStart(3, "0")}`;
     }
+  } else {
+    const m = s.match(/(?:EMPLOYEE[-_ ]*|EMP[-_ ]*)?(\d{1,10})$/);
+    if (m && !s.startsWith("EMP-")) s = `EMP-${m[1]}`;
   }
 
-
-  scanLocked = false;
+  const cb = callback;
+  callback = null;
+  closeAndStop();
+  Promise.resolve(cb(s)).catch(err => console.error("Scan callback error:", err));
 }
 
+export async function stop() {
+  if (!scanner) return;
+  const s = scanner;
+  scanner = null;
+  try { await s.stop(); } catch {}
+  try { s.clear(); } catch {}
+}
 
-/* ==========================================================================
-   CAMERA STATUS
-   ========================================================================== */
+function closeAndStop() {
+  document.getElementById("scanner-modal")?.classList.remove("active");
+  stop();
+}
 
-function showCameraStatus(message) {
+export function closeScannerModal() {
+  callback = null;
+  closeAndStop();
+}
 
-  const statusElement =
-    document.getElementById(
-      'camera-status-msg'
-    );
+window.closeScannerModal = closeScannerModal;
 
-  if (statusElement) {
-
-    statusElement.textContent =
-      message;
-  }
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[ch]));
 }
