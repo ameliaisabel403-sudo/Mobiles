@@ -42,12 +42,31 @@ export function renderEmployeeQRMatrix(containerId, employees) {
   container.innerHTML = '';
 
   if (!employees || employees.length === 0) {
-    container.innerHTML = `
-      <div style="text-align: center; padding: 2rem; color: var(--text-dim); grid-column: 1/-1;">
-        <p>No employees found. Add employees first via the Supabase database or demo mode.</p>
-      </div>
-    `;
-    return;
+    // Attempt to load from demo storage or defaults
+    try {
+      const dbStr = localStorage.getItem('company_phone_tracker_demo_db_v2');
+      if (dbStr) {
+        const parsed = JSON.parse(dbStr);
+        if (parsed.employees && parsed.employees.length > 0) {
+          employees = parsed.employees;
+        }
+      }
+    } catch (e) {}
+
+    if (!employees || employees.length === 0) {
+      employees = [
+        { employee_number: 'EMP-1001', full_name: 'Alex Mercer', department: 'Logistics' },
+        { employee_number: 'EMP-1002', full_name: 'Sarah Jenkins', department: 'Field Operations' },
+        { employee_number: 'EMP-1003', full_name: 'Michael Chen', department: 'Warehouse' },
+        { employee_number: 'EMP-1004', full_name: 'Emily Rodriguez', department: 'Quality Control' },
+        { employee_number: 'EMP-1005', full_name: 'David Kim', department: 'Technical Support' },
+        { employee_number: 'EMP-1006', full_name: 'Jessica Taylor', department: 'Fleet Management' },
+        { employee_number: 'EMP-1007', full_name: 'James Wilson', department: 'Security' },
+        { employee_number: 'EMP-1008', full_name: 'Amanda Martinez', department: 'Inventory' },
+        { employee_number: 'EMP-1009', full_name: 'Robert Patel', department: 'Delivery Ops' },
+        { employee_number: 'EMP-1010', full_name: 'Lisa Anderson', department: 'Site Inspection' }
+      ];
+    }
   }
 
   employees.forEach((emp, index) => {
@@ -84,21 +103,35 @@ function generateQRCodeCanvas(elementId, textPayload) {
   const el = document.getElementById(elementId);
   if (!el) return;
 
+  el.innerHTML = '';
+  let generated = false;
+
   if (window.QRCode) {
-    el.innerHTML = '';
-    new window.QRCode(el, {
-      text: textPayload,
-      width: 140,
-      height: 140,
-      colorDark: "#090d16",
-      colorLight: "#ffffff",
-      correctLevel: window.QRCode.CorrectLevel.H
-    });
-  } else {
+    try {
+      new window.QRCode(el, {
+        text: textPayload,
+        width: 140,
+        height: 140,
+        colorDark: "#090d16",
+        colorLight: "#ffffff",
+        correctLevel: window.QRCode.CorrectLevel.H
+      });
+      generated = true;
+    } catch (e) {
+      console.warn('Local QRCode generator error, falling back to image:', e);
+      generated = false;
+    }
+  }
+
+  if (!generated) {
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(textPayload)}`;
-    el.innerHTML = `<img src="${qrUrl}" alt="${textPayload}" style="width: 140px; height: 140px;" />`;
+    el.innerHTML = `<img src="${qrUrl}" alt="${textPayload}" style="width: 140px; height: 140px; display: block; margin: 0 auto;" />`;
   }
 }
+
+// Expose on window for direct access across views
+window.renderQRMatrix = renderQRMatrix;
+window.renderEmployeeQRMatrix = renderEmployeeQRMatrix;
 
 // Global Single QR Download Helper (works for both phones and employees)
 window.downloadSingleQR = function(id, type = 'phone') {

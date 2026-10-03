@@ -237,33 +237,21 @@ async function initCameraStream() {
     };
 
 
-    /* --------------------------------------------------------------
-       TRY BACK CAMERA
-       -------------------------------------------------------------- */
-
     try {
+      // Strategy: start with simple environment facingMode
       await html5QrCodeScanner.start(
         { facingMode: 'environment' },
         config,
-
         function(decodedText) {
-
           handleScanResult(decodedText);
-
         },
-
-        function(errorMessage) {
-          // QR not detected yet
+        function() {
+          // scanner frame tick
         }
-
       );
 
-      showCameraStatus(
-        '🟢 Camera Active. Align the QR code inside the box.'
-      );
-
+      showCameraStatus('🟢 Camera Active. Point at the QR Code.');
       return;
-
     } catch (error) {
 
       console.warn(

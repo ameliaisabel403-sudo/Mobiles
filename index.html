@@ -38,6 +38,13 @@
 
       if (window._onSwitchView) {
         window._onSwitchView(viewId);
+      } else {
+        if (viewId === 'qr-print' && window.renderQRMatrix) {
+          window.renderQRMatrix('qr-matrix-container');
+        }
+        if (viewId === 'employee-qr-print' && window.renderEmployeeQRMatrix) {
+          window.renderEmployeeQRMatrix('employee-qr-matrix-container');
+        }
       }
     };
 
@@ -60,9 +67,18 @@
     window.openScannerModal = function(callback) {
       var modal = document.getElementById('scanner-modal');
       if (modal) modal.classList.add('active');
-      if (window._startCameraStream) {
-        window._startCameraStream(callback);
-      }
+      
+      var tryStart = function(attempts) {
+        if (window._startCameraStream) {
+          window._startCameraStream(callback);
+        } else if (attempts < 15) {
+          setTimeout(function() { tryStart(attempts + 1); }, 100);
+        } else {
+          var status = document.getElementById('camera-status-msg');
+          if (status) status.innerText = '⚠️ Camera script loading timed out. Use the dropdown below.';
+        }
+      };
+      tryStart(0);
     };
 
     window.closeScannerModal = function() {
