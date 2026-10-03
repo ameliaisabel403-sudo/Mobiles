@@ -483,27 +483,42 @@ function setupFormsAndModals() {
   }
 
   // Quick Select Fallback Scanner Options
+  // Quick Select Fallback Scanner Options (Desktop or Camera blocked)
   const quickSelect = document.getElementById('scanner-quick-select');
   if (quickSelect) {
     quickSelect.addEventListener('change', (e) => {
       const val = e.target.value;
       if (val) {
-        const cleanId = parsePhoneIdFromQR(val);
         closeScannerModal();
-        const activeView = document.querySelector('.view-section.active').id;
-        if (activeView === 'view-issue') {
-          const input = document.getElementById('issue-phone-id');
-          if (input) {
-            input.value = cleanId;
-            input.dispatchEvent(new Event('change', { bubbles: true }));
+        if (val.startsWith('EMP-')) {
+          const empInput = document.getElementById('issue-emp-number');
+          if (empInput) {
+            empInput.value = val;
+            empInput.dispatchEvent(new Event('change', { bubbles: true }));
           }
-        } else if (activeView === 'view-return') {
-          const input = document.getElementById('return-phone-id');
-          if (input) {
-            input.value = cleanId;
-            input.dispatchEvent(new Event('change', { bubbles: true }));
+          fetchEmployeeByNumber(val).then(emp => {
+            const nameInput = document.getElementById('issue-emp-name');
+            if (emp && nameInput) nameInput.value = emp.full_name;
+          });
+          showToast(`Selected Employee: ${val}`, 'success');
+        } else {
+          const cleanId = parsePhoneIdFromQR(val);
+          const activeView = document.querySelector('.view-section.active')?.id;
+          if (activeView === 'view-issue') {
+            const input = document.getElementById('issue-phone-id');
+            if (input) {
+              input.value = cleanId;
+              input.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          } else if (activeView === 'view-return') {
+            const input = document.getElementById('return-phone-id');
+            if (input) {
+              input.value = cleanId;
+              input.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            handleReturnLookup(cleanId);
           }
-          handleReturnLookup(cleanId);
+          showToast(`Selected Phone: ${cleanId}`, 'success');
         }
         quickSelect.value = '';
       }
@@ -642,6 +657,10 @@ window.closeSettingsModal = function() {
 
 window.closeScannerModal = function() {
   closeScannerModal();
+};
+
+window.openScannerModal = function(callback) {
+  openScannerModal(callback);
 };
 
 function setupSettingsPanel() {
