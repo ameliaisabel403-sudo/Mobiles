@@ -22,7 +22,7 @@
   <!-- QRCode Generator JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-  <!-- Immediate Navigation Script (Never blocked by ES module async loading) -->
+  <!-- Immediate Navigation & Modal Helpers (Zero module delay) -->
   <script>
     window.switchView = function(viewId) {
       document.querySelectorAll('.view-section').forEach(function(sec) {
@@ -38,6 +38,80 @@
 
       if (window._onSwitchView) {
         window._onSwitchView(viewId);
+      }
+    };
+
+    window.openSettingsModal = function() {
+      var modal = document.getElementById('settings-modal');
+      if (modal) {
+        var urlInput = document.getElementById('setting-supabase-url');
+        var keyInput = document.getElementById('setting-supabase-key');
+        if (urlInput) urlInput.value = localStorage.getItem('SUPABASE_URL') || '';
+        if (keyInput) keyInput.value = localStorage.getItem('SUPABASE_ANON_KEY') || '';
+        modal.classList.add('active');
+      }
+    };
+
+    window.closeSettingsModal = function() {
+      var modal = document.getElementById('settings-modal');
+      if (modal) modal.classList.remove('active');
+    };
+
+    window.openScannerModal = function(callback) {
+      var modal = document.getElementById('scanner-modal');
+      if (modal) modal.classList.add('active');
+      if (window._startCameraStream) {
+        window._startCameraStream(callback);
+      }
+    };
+
+    window.closeScannerModal = function() {
+      var modal = document.getElementById('scanner-modal');
+      if (modal) modal.classList.remove('active');
+      if (window._stopCameraStream) {
+        window._stopCameraStream();
+      }
+    };
+
+    window.scanEmployeeCardQR = function() {
+      if (window._scanEmployeeCardQR) {
+        window._scanEmployeeCardQR();
+      } else {
+        window.openScannerModal(function(val) {
+          var input = document.getElementById('issue-emp-number');
+          if (input) {
+            input.value = val;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        });
+      }
+    };
+
+    window.scanIssuePhoneQR = function() {
+      if (window._scanIssuePhoneQR) {
+        window._scanIssuePhoneQR();
+      } else {
+        window.openScannerModal(function(val) {
+          var input = document.getElementById('issue-phone-id');
+          if (input) {
+            input.value = val;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        });
+      }
+    };
+
+    window.scanReturnPhoneQR = function() {
+      if (window._scanReturnPhoneQR) {
+        window._scanReturnPhoneQR();
+      } else {
+        window.openScannerModal(function(val) {
+          var input = document.getElementById('return-phone-id');
+          if (input) {
+            input.value = val;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        });
       }
     };
   </script>
@@ -500,19 +574,19 @@
         <button id="btn-close-settings" class="btn btn-sm btn-glass" onclick="window.closeSettingsModal && window.closeSettingsModal()">✕</button>
       </div>
 
-      <form id="form-settings" style="margin-top: 1rem;">
+      <form id="form-settings" style="margin-top: 1rem;" onsubmit="event.preventDefault(); var u=document.getElementById('setting-supabase-url').value.trim(); var k=document.getElementById('setting-supabase-key').value.trim(); if(u&&k){localStorage.setItem('SUPABASE_URL',u);localStorage.setItem('SUPABASE_ANON_KEY',k);alert('Saved! Re-loading to connect live database...');window.location.reload();}else{alert('Please enter both Supabase URL and Key');}">
         <div class="form-group">
           <label class="form-label">Supabase Project URL</label>
-          <input type="url" id="setting-supabase-url" class="form-input" placeholder="https://your-project.supabase.co" />
+          <input type="url" id="setting-supabase-url" class="form-input" placeholder="https://your-project.supabase.co" required />
         </div>
 
         <div class="form-group">
           <label class="form-label">Supabase Public Anon Key</label>
-          <input type="password" id="setting-supabase-key" class="form-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." />
+          <input type="password" id="setting-supabase-key" class="form-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." required />
         </div>
 
         <p style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 1.25rem;">
-          🔒 Your keys are saved locally in your browser session. Never use a service_role key here.
+          🔒 Your keys are saved in your browser storage. Connecting will switch to 🟢 SUPABASE LIVE.
         </p>
 
         <div style="display: flex; gap: 1rem; justify-content: flex-end;">

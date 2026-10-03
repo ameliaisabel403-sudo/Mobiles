@@ -131,6 +131,12 @@ export async function closeScannerModal() {
 }
 
 window.closeScannerModal = closeScannerModal;
+window._startCameraStream = function(cb) {
+  openScannerModal(cb);
+};
+window._stopCameraStream = function() {
+  stopCameraStream();
+};
 
 
 /* ==========================================================================

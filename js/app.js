@@ -360,6 +360,8 @@ function setupFormsAndModals() {
     });
   };
 
+  window._scanEmployeeCardQR = window.scanEmployeeCardQR;
+
   const empScanBtn = document.getElementById('btn-issue-scan-emp-qr');
   if (empScanBtn) {
     empScanBtn.addEventListener('click', (e) => {
@@ -381,6 +383,7 @@ function setupFormsAndModals() {
       showToast(`Scanned Phone: ${cleanId}`, 'success');
     });
   };
+  window._scanIssuePhoneQR = window.scanIssuePhoneQR;
 
   const issueScanBtn = document.getElementById('btn-issue-scan-qr');
   if (issueScanBtn) {
@@ -434,6 +437,7 @@ function setupFormsAndModals() {
       showToast(`Scanned Phone: ${cleanId}`, 'success');
     });
   };
+  window._scanReturnPhoneQR = window.scanReturnPhoneQR;
 
   const returnScanBtn = document.getElementById('btn-return-scan-qr');
   if (returnScanBtn) {
