@@ -122,11 +122,30 @@ CREATE POLICY "Authenticated staff can view employees" ON employees
 CREATE POLICY "Authenticated staff can insert employees" ON employees
     FOR INSERT TO authenticated WITH CHECK (true);
 
+CREATE POLICY "Authenticated staff can update employees" ON employees
+    FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+
+CREATE POLICY "Authenticated staff can delete employees" ON employees
+    FOR DELETE TO authenticated USING (true);
+
 CREATE POLICY "Authenticated staff can view transactions" ON transactions
     FOR SELECT TO authenticated USING (true);
 
 CREATE POLICY "Authenticated staff can insert transactions" ON transactions
     FOR INSERT TO authenticated WITH CHECK (true);
+
+-- Kiosk mode uses the Supabase anon key, without Supabase Auth.
+CREATE POLICY "Public insert employees for kiosk" ON employees
+    FOR INSERT TO anon WITH CHECK (true);
+
+CREATE POLICY "Public update employees for kiosk" ON employees
+    FOR UPDATE TO anon USING (true) WITH CHECK (true);
+
+CREATE POLICY "Public delete employees for kiosk" ON employees
+    FOR DELETE TO anon USING (true);
+
+CREATE POLICY "Public read transactions for kiosk" ON transactions
+    FOR SELECT TO anon USING (true);
 
 -- Allow public read access to phones/employees if operating in open kiosk mode (Optional)
 CREATE POLICY "Public read access for kiosk phones" ON phones

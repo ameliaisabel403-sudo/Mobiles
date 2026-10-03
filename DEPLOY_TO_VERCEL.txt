@@ -1,23 +1,31 @@
-PHONE TRACK USER-FRIENDLY VERSION
+# Cinnamon Life HK Mobile — Vercel Deployment
 
-IMPORTANT:
-Upload the ENTIRE project folder, not only index.html.
+## Fixed in this version
+- Fixed mismatch between `index.html` and the loaded `js/` modules.
+- Fixed mobile QR camera modal IDs and camera startup.
+- Employee QR now automatically opens the Phone QR scanner.
+- Phone QR scan can complete the issue flow automatically.
+- Fixed Supabase settings key names (`SUPABASE_URL` / `SUPABASE_ANON_KEY`).
+- Fixed report search, date filters, and CSV export.
+- Fixed kiosk-mode Supabase RLS policies for employee insert/update/delete and transaction reads.
+- Staff/export name defaults to **Nehan**.
 
-The project must contain:
-index.html
-css/main.css
-js/app.js
-js/config.js
-js/database.js
-js/qr-generator.js
-js/reports.js
-js/scanner.js
+## Deploy
+1. Upload the complete project folder to Vercel.
+2. Keep `index.html` in the project root.
+3. Use the default Vercel output for a static site; no build command is required.
+4. Open the HTTPS Vercel URL on the phone. Camera access requires HTTPS.
 
-If using Vercel:
-1. Open your project.
-2. Deploy the complete project folder.
-3. Make sure index.html is in the project root.
-4. Do not upload only the HTML file.
+## Connect Supabase
+This is a browser/static app. The Supabase **anon/public key** is safe to use in a browser when your RLS policies are configured correctly. Never put the `service_role` key in this project.
 
-This version also contains embedded CSS inside index.html as a backup,
-so the design remains visible if the CSS folder is accidentally missed.
+You can either:
+- Open **Settings** in the website and enter the Supabase Project URL and anon/public key, or
+- Put the public values in `js/config.js`:
+  - `DEPLOY_SUPABASE_URL`
+  - `DEPLOY_SUPABASE_ANON_KEY`
+
+After changing `schema.sql`, run the SQL in the Supabase SQL Editor, then redeploy/reload the site.
+
+## Important
+If an older deployment is cached, use a new deployment or hard refresh the Vercel site after uploading the fixed files.
