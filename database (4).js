@@ -240,7 +240,21 @@ export async function returnPhone({ phoneId, condition = "Good", notes = "", sta
     if (u.error) throw u.error;
 
     const t = await query("transactions", "insert", { data: tx });
-    if (t.error) throw t.error;
+    if (t.error) {
+      // Best-effort rollback: restore phone to ISSUED if transaction log fails.
+      await query("phones", "update", {
+        field: "id",
+        value: phoneId,
+        data: {
+          status: "ISSUED",
+          current_employee_id: tx.employee_number,
+          current_employee_name: tx.employee_name,
+          last_return_time: null,
+          updated_at: new Date().toISOString()
+        }
+      });
+      throw t.error;
+    }
   } else {
     phone.status = "AVAILABLE";
     phone.current_employee_id = null;

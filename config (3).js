@@ -2,8 +2,8 @@ let client = null;
 
 // For a static Vercel site, browser-safe Supabase credentials can be stored
 // here OR entered once through Settings. Never put a Supabase service_role key here.
-const DEPLOY_SUPABASE_URL = "";
-const DEPLOY_SUPABASE_ANON_KEY = "";
+const DEPLOY_SUPABASE_URL = "https://twhbircmblqiqkfjyegs.supabase.co";
+const DEPLOY_SUPABASE_ANON_KEY = "sb_publishable_jvV4AD9LXR3B10LIBOe9sw_P1aDMFAq";
 
 const storedUrl =
   localStorage.getItem("SUPABASE_URL") ||
@@ -30,9 +30,8 @@ export function initSupabaseClient() {
   if (!window.supabase?.createClient) {
     throw new Error("Supabase library did not load. Check your internet connection.");
   }
-  if (!client) {
-    client = window.supabase.createClient(appConfig.supabaseUrl, appConfig.supabaseKey);
-  }
+  // Always create a fresh client so new credentials take effect immediately.
+  client = window.supabase.createClient(appConfig.supabaseUrl, appConfig.supabaseKey);
   return client;
 }
 

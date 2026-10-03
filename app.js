@@ -1,4 +1,5 @@
 import { initSupabaseClient, appConfig, saveSupabaseConfig } from "./config.js";
+import { initAuth, getCurrentStaff } from "./auth.js";
 import {
   fetchAllPhones, fetchAllEmployees, fetchEmployeeByNumber, fetchTransactions,
   saveEmployee, deleteEmployee, issuePhone, returnPhone
@@ -17,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupNavigation();
   setupEvents();
   updateBadge();
-  updateUser();
+  await initAuth(user => updateUser(user));
   await refresh();
   renderQRMatrix("qr-matrix-container");
   renderEmployeeQRMatrix("employee-qr-matrix-container", employees);
@@ -144,7 +145,7 @@ async function completeIssue(employeeId, phoneId) {
       phoneId: phone,
       employeeNumber: id,
       employeeName: emp.full_name,
-      staffEmail: "Nehan"
+      staffEmail: getCurrentStaff()?.email || "Staff"
     });
 
     setVal("issue-emp-number", id);
@@ -170,7 +171,7 @@ async function handleReturn(e) {
       phoneId: val("return-phone-id"),
       condition: val("return-condition") || "Good",
       notes: val("return-notes"),
-      staffEmail: "Nehan"
+      staffEmail: getCurrentStaff()?.email || "Staff"
     });
     toast(`${result.phoneId} returned successfully.`, "success");
     e.target.reset();
@@ -336,9 +337,9 @@ function updateBadge() {
   badge.className = `badge ${appConfig.isConfigured ? "badge-live" : "badge-issued"}`;
   badge.textContent = appConfig.isConfigured ? "🟢 SUPABASE LIVE" : "⚡ DEMO DB MODE";
 }
-function updateUser() {
+function updateUser(user) {
   const el = document.getElementById("nav-user-email");
-  if (el) el.textContent = "Nehan";
+  if (el) el.textContent = user?.email || getCurrentStaff()?.email || "Staff";
 }
 
 function toast(message, type = "") {
