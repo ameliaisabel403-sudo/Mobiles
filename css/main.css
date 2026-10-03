@@ -164,6 +164,11 @@ html, body {
   align-items: center;
   gap: 0.5rem;
   transition: var(--transition-fast);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  position: relative;
+  z-index: 55;
 }
 
 .nav-btn:hover {
