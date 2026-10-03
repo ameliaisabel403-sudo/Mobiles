@@ -195,13 +195,17 @@ async function initCameraStream() {
       showCameraStatus(
         '❌ Camera requires HTTPS. Please open the Vercel website.'
       );
-
       return;
     }
 
+    // Clean qr-reader element before attaching
+    const container = document.getElementById('qr-reader');
+    if (container) {
+      container.innerHTML = '';
+    }
+
     // Create scanner
-    html5QrCodeScanner =
-      new window.Html5Qrcode('qr-reader');
+    html5QrCodeScanner = new window.Html5Qrcode('qr-reader');
 
 
     /* --------------------------------------------------------------
