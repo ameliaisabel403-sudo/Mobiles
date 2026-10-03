@@ -21,6 +21,26 @@
   <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <!-- QRCode Generator JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- Immediate Navigation Script (Never blocked by ES module async loading) -->
+  <script>
+    window.switchView = function(viewId) {
+      document.querySelectorAll('.view-section').forEach(function(sec) {
+        sec.classList.remove('active');
+      });
+      document.querySelectorAll('.nav-btn').forEach(function(btn) {
+        btn.classList.remove('active');
+      });
+      var activeSec = document.getElementById('view-' + viewId);
+      if (activeSec) activeSec.classList.add('active');
+      var activeBtn = document.querySelector('.nav-btn[data-view="' + viewId + '"]');
+      if (activeBtn) activeBtn.classList.add('active');
+
+      if (window._onSwitchView) {
+        window._onSwitchView(viewId);
+      }
+    };
+  </script>
 </head>
 <body>
 

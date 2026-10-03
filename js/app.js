@@ -2,7 +2,7 @@
    COMPANY PHONE TRACKER - MAIN APPLICATION COORDINATOR
    ========================================================================== */
 
-import { initSupabaseClient, appConfig, saveSupabaseConfig } from './config.js';
+import { initSupabaseClient, appConfig, saveSupabaseConfig, supabaseClient } from './config.js';
 import { initAuth, loginStaff, logoutStaff, getCurrentStaff, isAuthenticated } from './auth.js';
 import { fetchAllPhones, fetchTransactions, fetchEmployeeByNumber, fetchAllEmployees, issuePhone, returnPhone } from './database.js';
 import { openScannerModal, closeScannerModal, parsePhoneIdFromQR } from './scanner.js';
@@ -267,6 +267,14 @@ export function switchView(viewId) {
   }
 }
 window.switchView = switchView;
+window._onSwitchView = function(viewId) {
+  if (viewId === 'qr-print') {
+    renderQRMatrix('qr-matrix-container');
+  }
+  if (viewId === 'employee-qr-print') {
+    renderEmployeeQRMatrix('employee-qr-matrix-container', cachedEmployees);
+  }
+};
 window.refreshDashboardData = refreshDashboardData;
 
 // Forms & Modals Controller
